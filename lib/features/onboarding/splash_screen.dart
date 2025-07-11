@@ -6,6 +6,7 @@ import '../../../core/theme/text_styles.dart';
 import '../widgets/animated_logo.dart';
 import '../widgets/animated_background.dart';
 import '../widgets/loading_indicator.dart';
+import 'onboarding_screen.dart'; // Add this import
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -58,11 +59,15 @@ class _SplashScreenState extends State<SplashScreen>
       }
     });
 
-    // Navigate to next screen after splash
+    // Navigate to onboarding screen after 3 seconds
     Future.delayed(const Duration(milliseconds: 3000), () {
       if (mounted) {
-        // Navigate to home or onboarding
-        // Navigator.pushReplacementNamed(context, '/home');
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const OnboardingScreen(),
+          ),
+        );
       }
     });
   }
