@@ -1,5 +1,6 @@
 // lib/features/onboarding/screens/onboarding_screen.dart
 import 'package:flutter/material.dart';
+import 'package:pulsebreak_plus/features/auth/login_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -63,11 +64,11 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   }
 
   void _onGetStarted() {
-    // For now, just show a snackbar
-    ScaffoldMessenger.of(
+    // Navigate to login screen
+    Navigator.pushReplacement(
       context,
-    ).showSnackBar(const SnackBar(content: Text('Welcome to PulseBreak+!')));
-    // Later: Navigator.pushReplacementNamed(context, '/home');
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
+    );
   }
 
   @override

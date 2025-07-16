@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "142712034247",
+    "project_id": "pulsebreak-ad0c1",
+    "storage_bucket": "pulsebreak-ad0c1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:142712034247:android:015dcd9d306c8728687fe2",
+        "android_client_info": {
+          "package_name": "com.legacyarc.pulsebreak_plus"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB9U2AFvj99I1ZP_L_ivv09rIetW7y-okA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

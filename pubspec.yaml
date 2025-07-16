@@ -14,20 +14,32 @@ dependencies:
   # Icons & UI
   cupertino_icons: ^1.0.8
   lottie: ^3.1.0
+  font_awesome_flutter: ^10.6.0
 
-  # State management (update if using Riverpod, Bloc, etc.)
+  # State management
   provider: ^6.1.2
 
-  # Firebase Core (you can add other Firebase packages as needed)
+  # Firebase
   firebase_core: ^3.0.0
   firebase_auth: ^5.0.0
   cloud_firestore: ^5.0.0
   firebase_messaging: ^15.0.0
 
-  # Optional UI/UX enhancements
+  # Authentication & Social Login
+  google_sign_in: ^6.1.6
+  flutter_facebook_auth: ^6.0.4
+  sign_in_with_apple: ^5.0.0
+
+  # UI/UX enhancements
   fluttertoast: ^8.2.2
   shared_preferences: ^2.2.3
   intl: ^0.19.0
+
+  # Additional useful packages for wellness apps
+  url_launcher: ^6.2.1        # For external links
+  image_picker: ^1.0.4        # For profile pictures
+  permission_handler: ^11.0.1 # For handling permissions
+  # local_notifications: ^16.3.0 # For wellness reminders
 
 dev_dependencies:
   flutter_test:
@@ -43,7 +55,6 @@ flutter:
     - assets/lotties/
 
   fonts:
-    - family: Poppins
+    - family: TextMeOne
       fonts:
         - asset: assets/fonts/TextMeOne-Regular.ttf
-        
