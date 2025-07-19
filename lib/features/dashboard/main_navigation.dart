@@ -4,6 +4,7 @@ import 'package:pulsebreak_plus/features/dashboard/stats_screen.dart';
 import 'package:pulsebreak_plus/features/dashboard/journal_screen.dart';
 import 'package:pulsebreak_plus/features/dashboard/settings_screen.dart';
 import 'package:pulsebreak_plus/features/profile/profile_screen.dart';
+import 'package:pulsebreak_plus/services/mood_service.dart';
 
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
@@ -23,8 +24,25 @@ class _MainNavigationState extends State<MainNavigation> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    MoodService.instance.addListener(_onMoodChanged);
+  }
+
+  @override
+  void dispose() {
+    MoodService.instance.removeListener(_onMoodChanged);
+    super.dispose();
+  }
+
+  void _onMoodChanged() {
+    setState(() {});
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: MoodService.instance.currentBackgroundColor,
       body: _screens[_currentIndex],
       bottomNavigationBar: Container(
         margin: const EdgeInsets.fromLTRB(20, 0, 20, 16),

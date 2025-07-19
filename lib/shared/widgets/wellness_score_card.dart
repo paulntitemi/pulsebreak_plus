@@ -1,11 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:pulsebreak_plus/features/wellness/wellness_insights_screen.dart';
 
 class WellnessScoreCard extends StatelessWidget {
   const WellnessScoreCard({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const WellnessInsightsScreen()),
+        );
+      },
+      child: Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -132,6 +140,7 @@ class WellnessScoreCard extends StatelessWidget {
           ),
         ],
       ),
+    ),
     );
   }
 }

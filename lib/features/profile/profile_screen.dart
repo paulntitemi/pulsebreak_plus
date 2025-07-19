@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:pulsebreak_plus/shared/widgets/stat_card.dart';
 import 'package:pulsebreak_plus/shared/widgets/profile_tile.dart';
+import 'package:pulsebreak_plus/features/reminders/smart_reminders_screen.dart';
+import 'package:pulsebreak_plus/features/analytics/wellness_analytics_screen.dart';
+import 'package:pulsebreak_plus/services/mood_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -17,6 +20,8 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
   @override
   void initState() {
     super.initState();
+    MoodService.instance.addListener(_onMoodChanged);
+    
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
@@ -43,14 +48,19 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
 
   @override
   void dispose() {
+    MoodService.instance.removeListener(_onMoodChanged);
     _animationController.dispose();
     super.dispose();
+  }
+
+  void _onMoodChanged() {
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFAF9F7), // Light cream background
+      backgroundColor: MoodService.instance.currentBackgroundColor,
       body: SafeArea(
         child: FadeTransition(
           opacity: _fadeAnimation,
@@ -236,7 +246,10 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
           icon: Icons.trending_up,
           accentColor: const Color(0xFF6366F1),
           onTap: () {
-            // Navigate to mood trends
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const WellnessAnalyticsScreen()),
+            );
           },
         ),
         
@@ -285,6 +298,21 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
           accentColor: const Color(0xFF8B5CF6),
           onTap: () {
             // Navigate to journal
+          },
+        ),
+        
+        const SizedBox(height: 12),
+        
+        ProfileTile(
+          title: 'Smart Reminders',
+          subtitle: 'Manage your wellness notifications',
+          icon: Icons.notifications_active,
+          accentColor: const Color(0xFF8B5CF6),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const SmartRemindersScreen()),
+            );
           },
         ),
         
