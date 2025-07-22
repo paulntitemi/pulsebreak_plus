@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pulsebreak_plus/shared/widgets/circular_mood_picker.dart';
 import 'package:pulsebreak_plus/shared/widgets/mood_category_card.dart';
 import 'package:pulsebreak_plus/services/mood_service.dart';
+import 'package:pulsebreak_plus/features/dashboard/main_navigation.dart';
 import 'dart:math' as math;
 
 class MoodCheckinScreen extends StatefulWidget {
@@ -23,25 +24,63 @@ class _MoodCheckinScreenState extends State<MoodCheckinScreen> {
   ];
 
   void _saveMoodEntry() {
+    print('=== SAVE MOOD ENTRY CALLED ===');
+    print('Selected mood: $_selectedMood');
+    print('Selected categories: $_selectedCategories');
+    print('Notes: $_notes');
+    
     if (_selectedMood != null) {
-      // Save mood to service
-      MoodService().saveMoodEntry(
-        moodLabel: _selectedMood!,
-        categories: _selectedCategories,
-        notes: _notes,
-      );
+      try {
+        print('About to save mood to service...');
+        
+        // Save mood to service
+        MoodService.instance.saveMoodEntry(
+          moodLabel: _selectedMood!,
+          categories: _selectedCategories,
+          notes: _notes,
+        );
 
-      // Show success message
+        print('Mood saved successfully! Showing snackbar...');
+
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Mood logged: $_selectedMood'),
+            backgroundColor: const Color(0xFF10B981),
+            duration: const Duration(seconds: 1),
+          ),
+        );
+
+        print('About to navigate to dashboard...');
+
+        // Navigate to dashboard and clear all previous routes
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const MainNavigation()),
+          (Route<dynamic> route) => false,
+        );
+
+        print('Navigation complete!');
+        
+      } catch (e) {
+        print('=== ERROR OCCURRED ===');
+        print('Error saving mood: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error saving mood: $e'),
+            backgroundColor: const Color(0xFFEF4444),
+          ),
+        );
+      }
+    } else {
+      print('=== NO MOOD SELECTED ===');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Mood logged: $_selectedMood'),
-          backgroundColor: const Color(0xFF10B981),
+        const SnackBar(
+          content: Text('Please select a mood first'),
+          backgroundColor: Color(0xFFEF4444),
         ),
       );
-
-      // Navigate back to dashboard
-      Navigator.pop(context);
     }
+    print('=== END SAVE MOOD ENTRY ===');
   }
 
   @override
@@ -72,6 +111,7 @@ class _MoodCheckinScreenState extends State<MoodCheckinScreen> {
           padding: const EdgeInsets.all(20.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
               // Greeting message
               Container(
@@ -126,9 +166,14 @@ class _MoodCheckinScreenState extends State<MoodCheckinScreen> {
                   moods: _moods,
                   selectedMood: _selectedMood,
                   onMoodSelected: (mood) {
+                    print('=== MOOD SELECTION CALLBACK ===');
+                    print('Mood selected: $mood');
+                    print('Current _selectedMood before setState: $_selectedMood');
                     setState(() {
                       _selectedMood = mood;
                     });
+                    print('State updated, selected mood is now: $_selectedMood');
+                    print('=== END MOOD SELECTION ===');
                   },
                 ),
               ),
@@ -219,25 +264,38 @@ class _MoodCheckinScreenState extends State<MoodCheckinScreen> {
               const SizedBox(height: 32),
 
               // Save button
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: _selectedMood != null ? _saveMoodEntry : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF8B5CF6),
-                    disabledBackgroundColor: const Color(0xFFE5E7EB),
-                    shape: RoundedRectangleBorder(
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(16),
+                  onTap: () {
+                    print('=== INKWELL TAPPED ===');
+                    print('Button tapped! Selected mood: $_selectedMood');
+                    // Force a mood for testing if none selected
+                    if (_selectedMood == null) {
+                      print('No mood selected, setting default for testing');
+                      setState(() {
+                        _selectedMood = 'Happy';
+                      });
+                    }
+                    _saveMoodEntry();
+                  },
+                  child: Container(
+                    width: double.infinity,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: _selectedMood != null ? const Color(0xFF8B5CF6) : const Color(0xFFE5E7EB),
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    elevation: 0,
-                  ),
-                  child: Text(
-                    'Save Mood Entry',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: _selectedMood != null ? Colors.white : const Color(0xFF9CA3AF),
+                    child: Center(
+                      child: Text(
+                        'Save Mood Entry',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: _selectedMood != null ? Colors.white : const Color(0xFF9CA3AF),
+                        ),
+                      ),
                     ),
                   ),
                 ),

@@ -27,3 +27,56 @@ doc/api/
 
 .flutter-plugins
 .flutter-plugins-dependencies
+
+# ============= ADDITIONAL SECURITY & CLEANUP =============
+
+# Firebase Configuration Files (SENSITIVE - DO NOT COMMIT)
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
+firebase_options.dart
+
+# macOS system files
+.DS_Store
+**/.DS_Store
+
+# Android local configuration
+android/local.properties
+android/keystore.properties
+*.keystore
+*.jks
+
+# iOS Pods and build files
+ios/Pods/
+ios/Podfile.lock
+ios/.symlinks/
+ios/Flutter/flutter_export_environment.sh
+
+# Flutter generated files
+linux/flutter/ephemeral/
+macos/Flutter/ephemeral/
+windows/flutter/ephemeral/
+**/generated_plugin_registrant.dart
+**/GeneratedPluginRegistrant.*
+
+# IDE files
+*.iml
+*.ipr
+*.iws
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Certificates and keys
+*.pem
+*.key
+*.p12
+*.crt
+*.cer
+
+# Log files
+*.log
+
+# Temporary files
+*.tmp
+*.temp

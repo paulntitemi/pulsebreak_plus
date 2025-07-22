@@ -98,7 +98,12 @@ class CircularMoodPicker extends StatelessWidget {
             return Transform.translate(
               offset: Offset(x, y),
               child: GestureDetector(
-                onTap: () => onMoodSelected(mood['label']),
+                onTap: () {
+                  print('=== MOOD PICKER TAPPED ===');
+                  print('Mood tapped: ${mood['label']}');
+                  onMoodSelected(mood['label']);
+                  print('=== MOOD PICKER CALLBACK CALLED ===');
+                },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
                   width: isSelected ? 70 : 60,
