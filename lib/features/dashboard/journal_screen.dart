@@ -59,11 +59,25 @@ class _JournalScreenState extends State<JournalScreen> {
   String _selectedTagFilter = '';
   DateTime? _startDateFilter;
   DateTime? _endDateFilter;
+  bool _isSearchMode = false;
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _filteredEntries = _allEntries;
+    _searchController.addListener(() {
+      setState(() {
+        _searchQuery = _searchController.text;
+        _applyFilters();
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   @override
@@ -73,29 +87,57 @@ class _JournalScreenState extends State<JournalScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text(
-          'Journal',
-          style: TextStyle(
-            color: Color(0xFF2E3A59),
-            fontSize: 24,
-            fontWeight: FontWeight.w700,
-          ),
+        title: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          transitionBuilder: (child, animation) {
+            return SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(1.0, 0.0),
+                end: Offset.zero,
+              ).animate(CurvedAnimation(
+                parent: animation,
+                curve: Curves.easeInOut,
+              )),
+              child: child,
+            );
+          },
+          child: _isSearchMode 
+              ? _buildSearchBar()
+              : _buildTitle(),
         ),
         centerTitle: false,
         actions: [
-          IconButton(
-            icon: const Icon(
-              Icons.search,
-              color: Color(0xFF6B7280),
-            ),
-            onPressed: () => _showSearchDialog(),
-          ),
-          IconButton(
-            icon: const Icon(
-              Icons.filter_list,
-              color: Color(0xFF6B7280),
-            ),
-            onPressed: () => _showFilterDialog(),
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            child: _isSearchMode
+                ? IconButton(
+                    key: const ValueKey('close'),
+                    icon: const Icon(
+                      Icons.close,
+                      color: Color(0xFF6B7280),
+                    ),
+                    onPressed: _exitSearchMode,
+                  )
+                : Row(
+                    key: const ValueKey('actions'),
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(
+                          Icons.search,
+                          color: Color(0xFF6B7280),
+                        ),
+                        onPressed: _enterSearchMode,
+                      ),
+                      IconButton(
+                        icon: const Icon(
+                          Icons.filter_list,
+                          color: Color(0xFF6B7280),
+                        ),
+                        onPressed: () => _showFilterDialog(),
+                      ),
+                    ],
+                  ),
           ),
         ],
       ),
@@ -108,6 +150,96 @@ class _JournalScreenState extends State<JournalScreen> {
         label: const Text('New Entry'),
       ),
     );
+  }
+
+  Widget _buildTitle() {
+    return const Text(
+      'Journal',
+      key: ValueKey('title'),
+      style: TextStyle(
+        color: Color(0xFF2E3A59),
+        fontSize: 24,
+        fontWeight: FontWeight.w700,
+      ),
+    );
+  }
+
+  Widget _buildSearchBar() {
+    return Container(
+      key: const ValueKey('searchbar'),
+      height: 40,
+      child: TextField(
+        controller: _searchController,
+        autofocus: true,
+        decoration: InputDecoration(
+          hintText: 'Search journal entries...',
+          hintStyle: const TextStyle(
+            color: Color(0xFF9CA3AF),
+            fontSize: 16,
+          ),
+          prefixIcon: const Icon(
+            Icons.search,
+            color: Color(0xFF6B7280),
+            size: 20,
+          ),
+          suffixIcon: _searchQuery.isNotEmpty
+              ? IconButton(
+                  icon: const Icon(
+                    Icons.clear,
+                    color: Color(0xFF6B7280),
+                    size: 20,
+                  ),
+                  onPressed: () {
+                    _searchController.clear();
+                  },
+                )
+              : null,
+          filled: true,
+          fillColor: const Color(0xFFF3F4F6),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(20),
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(20),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(20),
+            borderSide: const BorderSide(
+              color: Color(0xFF8B5CF6),
+              width: 2,
+            ),
+          ),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 8,
+          ),
+        ),
+        style: const TextStyle(
+          color: Color(0xFF2E3A59),
+          fontSize: 16,
+        ),
+        onSubmitted: (value) {
+          // Optional: Handle search submission
+        },
+      ),
+    );
+  }
+
+  void _enterSearchMode() {
+    setState(() {
+      _isSearchMode = true;
+    });
+  }
+
+  void _exitSearchMode() {
+    setState(() {
+      _isSearchMode = false;
+      _searchController.clear();
+      _searchQuery = '';
+      _applyFilters();
+    });
   }
 
   Widget _buildEmptyState() {
@@ -222,8 +354,8 @@ class _JournalScreenState extends State<JournalScreen> {
 
           const SizedBox(height: 16),
 
-          // Search and filter summary
-          if (_searchQuery.isNotEmpty || _selectedMoodFilter.isNotEmpty || _selectedTagFilter.isNotEmpty)
+          // Filter summary (search is now in app bar)
+          if (_selectedMoodFilter.isNotEmpty || _selectedTagFilter.isNotEmpty || _startDateFilter != null || _endDateFilter != null)
             Container(
               padding: const EdgeInsets.all(16),
               margin: const EdgeInsets.only(bottom: 16),
@@ -432,20 +564,6 @@ class _JournalScreenState extends State<JournalScreen> {
     );
   }
 
-  void _showSearchDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => _SearchDialog(
-        currentQuery: _searchQuery,
-        onSearch: (query) {
-          setState(() {
-            _searchQuery = query;
-            _applyFilters();
-          });
-        },
-      ),
-    );
-  }
 
   void _showFilterDialog() {
     showModalBottomSheet(
@@ -509,21 +627,16 @@ class _JournalScreenState extends State<JournalScreen> {
 
   void _clearFilters() {
     setState(() {
-      _searchQuery = '';
       _selectedMoodFilter = '';
       _selectedTagFilter = '';
       _startDateFilter = null;
       _endDateFilter = null;
-      _filteredEntries = _allEntries;
+      _applyFilters();
     });
   }
 
   String _buildFilterSummary() {
     List<String> filters = [];
-    
-    if (_searchQuery.isNotEmpty) {
-      filters.add('Search: "$_searchQuery"');
-    }
     
     if (_selectedMoodFilter.isNotEmpty) {
       filters.add('Mood: $_selectedMoodFilter');
@@ -970,84 +1083,6 @@ class _EntryDetailsModal extends StatelessWidget {
   }
 }
 
-class _SearchDialog extends StatefulWidget {
-  final String currentQuery;
-  final Function(String) onSearch;
-
-  const _SearchDialog({
-    required this.currentQuery,
-    required this.onSearch,
-  });
-
-  @override
-  State<_SearchDialog> createState() => _SearchDialogState();
-}
-
-class _SearchDialogState extends State<_SearchDialog> {
-  late TextEditingController _searchController;
-
-  @override
-  void initState() {
-    super.initState();
-    _searchController = TextEditingController(text: widget.currentQuery);
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Search Journal Entries'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TextField(
-            controller: _searchController,
-            autofocus: true,
-            decoration: const InputDecoration(
-              hintText: 'Search titles, content, or tags...',
-              prefixIcon: Icon(Icons.search),
-              border: OutlineInputBorder(),
-            ),
-            onSubmitted: (value) {
-              widget.onSearch(value.trim());
-              Navigator.pop(context);
-            },
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'Search through entry titles, content, and tags',
-            style: TextStyle(
-              fontSize: 14,
-              color: Color(0xFF6B7280),
-            ),
-          ),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            widget.onSearch(_searchController.text.trim());
-            Navigator.pop(context);
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF8B5CF6),
-            foregroundColor: Colors.white,
-          ),
-          child: const Text('Search'),
-        ),
-      ],
-    );
-  }
-}
 
 class _FilterModal extends StatefulWidget {
   final String selectedMood;

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pulsebreak_plus/features/home/home_screen.dart';
-import 'package:pulsebreak_plus/features/dashboard/stats_screen.dart';
+import 'package:pulsebreak_plus/features/dashboard/community_screen.dart';
 import 'package:pulsebreak_plus/features/dashboard/journal_screen.dart';
 import 'package:pulsebreak_plus/features/dashboard/settings_screen.dart';
 import 'package:pulsebreak_plus/features/profile/profile_screen.dart';
@@ -18,7 +18,7 @@ class _MainNavigationState extends State<MainNavigation> {
   
   final List<Widget> _screens = [
     const HomeScreen(),
-    const StatsScreen(),
+    const CommunityScreen(),
     const JournalScreen(),
     const ProfileScreen(),
   ];
@@ -69,7 +69,7 @@ class _MainNavigationState extends State<MainNavigation> {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _buildNavItem(Icons.home_rounded, 0),
-              _buildNavItem(Icons.bar_chart_rounded, 1),
+              _buildNavItem(Icons.people_rounded, 1),
               _buildNavItem(Icons.book_rounded, 2),
               _buildNavItem(Icons.person_rounded, 3),
             ],
