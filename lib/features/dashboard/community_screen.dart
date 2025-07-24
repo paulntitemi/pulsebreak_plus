@@ -58,6 +58,12 @@ class CommunityScreen extends StatefulWidget {
 class _CommunityScreenState extends State<CommunityScreen> with TickerProviderStateMixin {
   late TabController _tabController;
   
+  // Track which posts are liked by current user
+  final Set<String> _likedPosts = <String>{};
+  
+  // Track double-tap like animations
+  final Map<String, bool> _showLikeAnimation = <String, bool>{};
+  
   final List<CommunityUser> _friends = [
     CommunityUser(
       id: '1',
@@ -140,10 +146,601 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
     ),
   ];
 
+  void _showCreatePostDialog() {
+    final TextEditingController postController = TextEditingController();
+    String selectedMood = '😊';
+    String selectedAchievement = '';
+    
+    final List<String> moodOptions = ['😊', '😌', '💪', '🧘', '🎉', '😔', '😰', '🤔'];
+    final List<String> achievementOptions = [
+      '',
+      '7-day streak',
+      'Morning meditation',
+      'Completed workout',
+      'Journaled today',
+      'Practiced gratitude',
+      'Hydration goal met',
+      'Good sleep',
+      'Mindful moment',
+    ];
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => Container(
+          height: MediaQuery.of(context).size.height * 0.8,
+          margin: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Column(
+            children: [
+              // Handle bar
+              Container(
+                margin: const EdgeInsets.only(top: 12),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE5E7EB),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              
+              // Header
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Share with Community',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF2E3A59),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        if (postController.text.trim().isNotEmpty) {
+                          _addNewPost(postController.text.trim(), selectedMood, selectedAchievement);
+                          Navigator.pop(context);
+                        }
+                      },
+                      child: const Text(
+                        'Post',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF8B5CF6),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Post content input
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF9FAFB),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFE5E7EB)),
+                        ),
+                        child: TextField(
+                          controller: postController,
+                          maxLines: 4,
+                          maxLength: 280,
+                          decoration: const InputDecoration(
+                            hintText: 'How are you feeling today? Share your wellness journey...',
+                            border: InputBorder.none,
+                            hintStyle: TextStyle(color: Color(0xFF9CA3AF)),
+                          ),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Color(0xFF2E3A59),
+                          ),
+                        ),
+                      ),
+                      
+                      const SizedBox(height: 24),
+                      
+                      // Mood selection
+                      const Text(
+                        'Current Mood',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF2E3A59),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Wrap(
+                        spacing: 12,
+                        runSpacing: 8,
+                        children: moodOptions.map((mood) => GestureDetector(
+                          onTap: () => setModalState(() => selectedMood = mood),
+                          child: Container(
+                            width: 50,
+                            height: 50,
+                            decoration: BoxDecoration(
+                              color: selectedMood == mood 
+                                  ? const Color(0xFF8B5CF6).withValues(alpha: 0.1)
+                                  : const Color(0xFFF3F4F6),
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: selectedMood == mood 
+                                    ? const Color(0xFF8B5CF6)
+                                    : Colors.transparent,
+                                width: 2,
+                              ),
+                            ),
+                            child: Center(
+                              child: Text(mood, style: const TextStyle(fontSize: 24)),
+                            ),
+                          ),
+                        )).toList(),
+                      ),
+                      
+                      const SizedBox(height: 24),
+                      
+                      // Achievement selection
+                      const Text(
+                        'Share an Achievement (Optional)',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF2E3A59),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF9FAFB),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFE5E7EB)),
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: Theme(
+                            data: Theme.of(context).copyWith(
+                              canvasColor: Colors.white,
+                              textTheme: const TextTheme(
+                                bodyMedium: TextStyle(
+                                  color: Color(0xFF2E3A59),
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                            child: DropdownButton<String>(
+                              value: selectedAchievement,
+                              isExpanded: true,
+                              hint: const Text(
+                                'Select an achievement',
+                                style: TextStyle(
+                                  color: Color(0xFF9CA3AF),
+                                  fontSize: 14,
+                                ),
+                              ),
+                              style: const TextStyle(
+                                color: Color(0xFF2E3A59),
+                                fontSize: 14,
+                              ),
+                              dropdownColor: Colors.white,
+                              items: achievementOptions.map((achievement) => DropdownMenuItem(
+                                value: achievement,
+                                child: Text(
+                                  achievement.isEmpty ? 'No achievement' : achievement,
+                                  style: const TextStyle(
+                                    color: Color(0xFF2E3A59),
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              )).toList(),
+                              onChanged: (value) => setModalState(() => selectedAchievement = value ?? ''),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              
+              const SizedBox(height: 20),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _addNewPost(String content, String mood, String achievement) {
+    final newPost = CommunityPost(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      userId: 'current_user',
+      userName: 'Paul Nti', // This would come from user service
+      userAvatar: '👨‍💻',
+      content: content,
+      mood: mood,
+      timestamp: DateTime.now(),
+      likes: 0,
+      comments: [],
+      achievement: achievement,
+    );
+    
+    setState(() {
+      _recentPosts.insert(0, newPost); // Add to beginning of list
+    });
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Posted to community feed!'),
+        backgroundColor: Color(0xFF10B981),
+      ),
+    );
+  }
+
+  void _toggleLike(String postId) {
+    setState(() {
+      final postIndex = _recentPosts.indexWhere((post) => post.id == postId);
+      if (postIndex != -1) {
+        final post = _recentPosts[postIndex];
+        
+        if (_likedPosts.contains(postId)) {
+          // Unlike the post
+          _likedPosts.remove(postId);
+          _recentPosts[postIndex] = CommunityPost(
+            id: post.id,
+            userId: post.userId,
+            userName: post.userName,
+            userAvatar: post.userAvatar,
+            content: post.content,
+            mood: post.mood,
+            timestamp: post.timestamp,
+            likes: post.likes - 1,
+            comments: post.comments,
+            achievement: post.achievement,
+          );
+        } else {
+          // Like the post
+          _likedPosts.add(postId);
+          _recentPosts[postIndex] = CommunityPost(
+            id: post.id,
+            userId: post.userId,
+            userName: post.userName,
+            userAvatar: post.userAvatar,
+            content: post.content,
+            mood: post.mood,
+            timestamp: post.timestamp,
+            likes: post.likes + 1,
+            comments: post.comments,
+            achievement: post.achievement,
+          );
+        }
+      }
+    });
+  }
+
+  void _showCommentsModal(CommunityPost post) {
+    final TextEditingController commentController = TextEditingController();
+    
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => Container(
+          height: MediaQuery.of(context).size.height * 0.7,
+          margin: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Column(
+            children: [
+              // Handle bar
+              Container(
+                margin: const EdgeInsets.only(top: 12),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE5E7EB),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              
+              // Header
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF8B5CF6).withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Text(
+                          post.userAvatar,
+                          style: const TextStyle(fontSize: 18),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${post.userName}\'s Post',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF2E3A59),
+                            ),
+                          ),
+                          Text(
+                            '${post.comments.length} comments',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Color(0xFF6B7280),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
+              // Comments List
+              Expanded(
+                child: post.comments.isEmpty
+                    ? const Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.chat_bubble_outline,
+                              size: 60,
+                              color: Color(0xFFE5E7EB),
+                            ),
+                            SizedBox(height: 16),
+                            Text(
+                              'No comments yet',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Color(0xFF6B7280),
+                              ),
+                            ),
+                            SizedBox(height: 8),
+                            Text(
+                              'Be the first to comment!',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Color(0xFF9CA3AF),
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        itemCount: post.comments.length,
+                        itemBuilder: (context, index) => _buildCommentItem(post.comments[index], index),
+                      ),
+              ),
+              
+              // Add Comment Input
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: const BoxDecoration(
+                  border: Border(
+                    top: BorderSide(color: Color(0xFFE5E7EB), width: 1),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF4F8A8B),
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      child: const Icon(Icons.person, color: Colors.white, size: 18),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF9FAFB),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: const Color(0xFFE5E7EB)),
+                        ),
+                        child: TextField(
+                          controller: commentController,
+                          style: const TextStyle(
+                            color: Color(0xFF2E3A59),
+                            fontSize: 14,
+                          ),
+                          decoration: const InputDecoration(
+                            hintText: 'Add a comment...',
+                            hintStyle: TextStyle(
+                              color: Color(0xFF9CA3AF),
+                              fontSize: 14,
+                            ),
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 10,
+                            ),
+                          ),
+                          onSubmitted: (comment) {
+                            if (comment.trim().isNotEmpty) {
+                              _addComment(post.id, comment.trim());
+                              commentController.clear();
+                              setModalState(() {}); // Refresh the modal
+                            }
+                          },
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    GestureDetector(
+                      onTap: () {
+                        if (commentController.text.trim().isNotEmpty) {
+                          _addComment(post.id, commentController.text.trim());
+                          commentController.clear();
+                          setModalState(() {}); // Refresh the modal
+                        }
+                      },
+                      child: Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF8B5CF6),
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                        child: const Icon(Icons.send, color: Colors.white, size: 16),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCommentItem(String comment, int index) {
+    // Generate different avatars for variety
+    final List<String> avatars = ['👤', '👨‍💼', '👩‍💻', '👨‍🎓', '👩‍🎨', '👨‍⚕️', '👩‍🏫'];
+    final avatar = avatars[index % avatars.length];
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: const Color(0xFF8B5CF6).withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Center(
+              child: Text(avatar, style: const TextStyle(fontSize: 14)),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF3F4F6),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: const Color(0xFFE5E7EB),
+                  width: 1,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Community Member',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF8B5CF6),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    comment,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Color(0xFF2E3A59),
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _addComment(String postId, String comment) {
+    setState(() {
+      final postIndex = _recentPosts.indexWhere((post) => post.id == postId);
+      if (postIndex != -1) {
+        final post = _recentPosts[postIndex];
+        final updatedComments = List<String>.from(post.comments)..add(comment);
+        
+        _recentPosts[postIndex] = CommunityPost(
+          id: post.id,
+          userId: post.userId,
+          userName: post.userName,
+          userAvatar: post.userAvatar,
+          content: post.content,
+          mood: post.mood,
+          timestamp: post.timestamp,
+          likes: post.likes,
+          comments: updatedComments,
+          achievement: post.achievement,
+        );
+      }
+    });
+  }
+
+  void _handleDoubleTapLike(String postId) {
+    // Always like on double tap (don't toggle)
+    if (!_likedPosts.contains(postId)) {
+      _toggleLike(postId);
+    }
+    
+    // Show heart scale animation
+    setState(() {
+      _showLikeAnimation[postId] = true;
+    });
+    
+    // Hide animation after 300ms
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (mounted) {
+        setState(() {
+          _showLikeAnimation[postId] = false;
+        });
+      }
+    });
+  }
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _tabController.addListener(() {
+      setState(() {}); // Rebuild to show/hide FAB based on tab
+    });
   }
 
   @override
@@ -212,6 +809,13 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
           _buildChallengesTab(),
         ],
       ),
+      floatingActionButton: _tabController.index == 0
+          ? FloatingActionButton(
+              onPressed: () => _showCreatePostDialog(),
+              backgroundColor: const Color(0xFF8B5CF6),
+              child: const Icon(Icons.add, color: Colors.white),
+            )
+          : null,
     );
   }
 
@@ -235,58 +839,69 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
               ),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 50,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF8B5CF6).withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Center(
-                    child: Text(
-                      '😊',
-                      style: TextStyle(fontSize: 24),
+                Row(
+                  children: [
+                    Container(
+                      width: 50,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF8B5CF6).withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Center(
+                        child: Text(
+                          '😊',
+                          style: TextStyle(fontSize: 24),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'How are you feeling today?',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF2E3A59),
-                        ),
+                    const SizedBox(width: 16),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'How are you feeling today?',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF2E3A59),
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            'Share your wellness journey with friends',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Color(0xFF6B7280),
+                            ),
+                          ),
+                        ],
                       ),
-                      SizedBox(height: 4),
-                      Text(
-                        'Share your wellness journey with friends',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Color(0xFF6B7280),
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF8B5CF6),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Text(
-                    'Share',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
+                const SizedBox(height: 16),
+                GestureDetector(
+                  onTap: () => _showCreatePostDialog(),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF8B5CF6).withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFF8B5CF6).withValues(alpha: 0.3)),
+                    ),
+                    child: const Text(
+                      'What\'s on your mind?',
+                      style: TextStyle(
+                        color: Color(0xFF8B5CF6),
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
                     ),
                   ),
                 ),
@@ -316,21 +931,25 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
   }
 
   Widget _buildPostCard(CommunityPost post) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
+    return GestureDetector(
+      onDoubleTap: () => _handleDoubleTapLike(post.id),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Stack(
+          children: [
+            Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // User header
@@ -428,22 +1047,30 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
           Row(
             children: [
               GestureDetector(
-                onTap: () {
-                  // Like functionality
-                },
+                onTap: () => _toggleLike(post.id),
                 child: Row(
                   children: [
-                    const Icon(
-                      Icons.favorite_border,
-                      size: 18,
-                      color: Color(0xFF6B7280),
+                    AnimatedScale(
+                      scale: _showLikeAnimation[post.id] == true ? 1.5 : 1.0,
+                      duration: const Duration(milliseconds: 200),
+                      child: Icon(
+                        _likedPosts.contains(post.id) 
+                            ? Icons.favorite 
+                            : Icons.favorite_border,
+                        size: 18,
+                        color: _likedPosts.contains(post.id) 
+                            ? const Color(0xFFEF4444) 
+                            : const Color(0xFF6B7280),
+                      ),
                     ),
                     const SizedBox(width: 6),
                     Text(
                       '${post.likes}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
-                        color: Color(0xFF6B7280),
+                        color: _likedPosts.contains(post.id) 
+                            ? const Color(0xFFEF4444) 
+                            : const Color(0xFF6B7280),
                       ),
                     ),
                   ],
@@ -451,9 +1078,7 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
               ),
               const SizedBox(width: 24),
               GestureDetector(
-                onTap: () {
-                  // Comment functionality
-                },
+                onTap: () => _showCommentsModal(post),
                 child: Row(
                   children: [
                     const Icon(
@@ -472,20 +1097,32 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
                   ],
                 ),
               ),
-              const Spacer(),
+              const SizedBox(width: 24),
               GestureDetector(
                 onTap: () {
-                  // Share functionality
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Share functionality coming soon!'),
+                      backgroundColor: Color(0xFF8B5CF6),
+                    ),
+                  );
                 },
-                child: const Icon(
-                  Icons.share_outlined,
-                  size: 18,
-                  color: Color(0xFF6B7280),
+                child: Transform.rotate(
+                  angle: -0.52, // ~30 degrees to 2 o'clock position
+                  child: const Icon(
+                    Icons.send,
+                    size: 18,
+                    color: Color(0xFF6B7280),
+                  ),
                 ),
               ),
+              const Spacer(),
             ],
           ),
-        ],
+            ],
+          ),
+          ],
+        ),
       ),
     );
   }

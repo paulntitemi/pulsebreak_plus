@@ -34,6 +34,7 @@ dependencies:
   fluttertoast: ^8.2.2
   shared_preferences: ^2.2.3
   intl: ^0.19.0
+  http: ^1.1.0
 
   # Additional useful packages for wellness apps
   url_launcher: ^6.2.1        # For external links

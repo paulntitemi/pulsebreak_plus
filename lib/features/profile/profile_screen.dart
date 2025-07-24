@@ -3,6 +3,7 @@ import 'package:pulsebreak_plus/shared/widgets/stat_card.dart';
 import 'package:pulsebreak_plus/shared/widgets/profile_tile.dart';
 import 'package:pulsebreak_plus/features/reminders/smart_reminders_screen.dart';
 import 'package:pulsebreak_plus/features/analytics/wellness_analytics_screen.dart';
+import 'package:pulsebreak_plus/features/settings/settings_screen.dart';
 import 'package:pulsebreak_plus/services/mood_service.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -324,7 +325,10 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
           icon: Icons.settings,
           accentColor: const Color(0xFF6B7280),
           onTap: () {
-            // Navigate to settings
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const SettingsScreen()),
+            );
           },
         ),
       ],
