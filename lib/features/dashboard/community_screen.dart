@@ -22,6 +22,46 @@ class CommunityUser {
   });
 }
 
+class PotentialFriend {
+  final String id;
+  final String name;
+  final String avatar;
+  final String bio;
+  final int mutualFriends;
+  final List<String> commonInterests;
+  final bool isRequested;
+
+  PotentialFriend({
+    required this.id,
+    required this.name,
+    required this.avatar,
+    required this.bio,
+    required this.mutualFriends,
+    required this.commonInterests,
+    required this.isRequested,
+  });
+}
+
+class FriendRequest {
+  final String id;
+  final String userId;
+  final String userName;
+  final String userAvatar;
+  final String message;
+  final DateTime timestamp;
+  final bool isIncoming;
+
+  FriendRequest({
+    required this.id,
+    required this.userId,
+    required this.userName,
+    required this.userAvatar,
+    required this.message,
+    required this.timestamp,
+    required this.isIncoming,
+  });
+}
+
 class CommunityPost {
   final String id;
   final String userId;
@@ -63,6 +103,90 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
   
   // Track double-tap like animations
   final Map<String, bool> _showLikeAnimation = <String, bool>{};
+  
+  // Track custom emoji for mood selection (replaces the 8th emoji)
+  String _customMoodEmoji = '🤔';
+  
+  // Track friend requests
+  final Set<String> _sentRequests = <String>{};
+  
+  final List<PotentialFriend> _potentialFriends = [
+    PotentialFriend(
+      id: 'pf1',
+      name: 'Emma Wilson',
+      avatar: '👩‍🎓',
+      bio: 'Mindfulness advocate and yoga instructor. Spreading positive vibes!',
+      mutualFriends: 3,
+      commonInterests: ['Meditation', 'Yoga', 'Journaling'],
+      isRequested: false,
+    ),
+    PotentialFriend(
+      id: 'pf2',
+      name: 'David Chen',
+      avatar: '👨‍💼',
+      bio: 'Software engineer finding balance in tech life. Love hiking and reading.',
+      mutualFriends: 1,
+      commonInterests: ['Reading', 'Technology', 'Hiking'],
+      isRequested: false,
+    ),
+    PotentialFriend(
+      id: 'pf3',
+      name: 'Sofia Martinez',
+      avatar: '👩‍🎨',
+      bio: 'Artist and mental health advocate. Creating art that heals.',
+      mutualFriends: 2,
+      commonInterests: ['Art Therapy', 'Creative Writing', 'Mindfulness'],
+      isRequested: false,
+    ),
+    PotentialFriend(
+      id: 'pf4',
+      name: 'James Johnson',
+      avatar: '👨‍⚕️',
+      bio: 'Wellness coach helping others achieve their mental health goals.',
+      mutualFriends: 4,
+      commonInterests: ['Fitness', 'Nutrition', 'Coaching'],
+      isRequested: false,
+    ),
+    PotentialFriend(
+      id: 'pf5',
+      name: 'Luna Rodriguez',
+      avatar: '👩‍🏫',
+      bio: 'Psychologist and meditation teacher. Here to support your journey.',
+      mutualFriends: 2,
+      commonInterests: ['Psychology', 'Meditation', 'Self-care'],
+      isRequested: false,
+    ),
+    PotentialFriend(
+      id: 'pf6',
+      name: 'Alex Thompson',
+      avatar: '👨‍🎓',
+      bio: 'Student exploring mindfulness and building healthy habits.',
+      mutualFriends: 1,
+      commonInterests: ['Study Techniques', 'Habit Building', 'Music'],
+      isRequested: false,
+    ),
+  ];
+  
+  final List<FriendRequest> _friendRequests = [
+    FriendRequest(
+      id: 'fr1',
+      userId: 'user1',
+      userName: 'Oliver Smith',
+      userAvatar: '👨‍💻',
+      message: 'Hi! I saw your wellness journey posts and would love to connect!',
+      timestamp: DateTime.now().subtract(const Duration(hours: 2)),
+      isIncoming: true,
+    ),
+    FriendRequest(
+      id: 'fr2',
+      userId: 'user2',
+      userName: 'Zoe Adams',
+      userAvatar: '👩‍🔬',
+      message: 'Your mindfulness tips have been so helpful. Let\'s be wellness buddies!',
+      timestamp: DateTime.now().subtract(const Duration(days: 1)),
+      isIncoming: true,
+    ),
+  ];
   
   final List<CommunityUser> _friends = [
     CommunityUser(
@@ -151,7 +275,7 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
     String selectedMood = '😊';
     String selectedAchievement = '';
     
-    final List<String> moodOptions = ['😊', '😌', '💪', '🧘', '🎉', '😔', '😰', '🤔'];
+    final List<String> moodOptions = ['😊', '😌', '💪', '🧘', '🎉', '😔', '😰', _customMoodEmoji];
     final List<String> achievementOptions = [
       '',
       '7-day streak',
@@ -268,28 +392,55 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
                       Wrap(
                         spacing: 12,
                         runSpacing: 8,
-                        children: moodOptions.map((mood) => GestureDetector(
-                          onTap: () => setModalState(() => selectedMood = mood),
-                          child: Container(
-                            width: 50,
-                            height: 50,
-                            decoration: BoxDecoration(
-                              color: selectedMood == mood 
-                                  ? const Color(0xFF8B5CF6).withValues(alpha: 0.1)
-                                  : const Color(0xFFF3F4F6),
-                              shape: BoxShape.circle,
-                              border: Border.all(
+                        children: [
+                          // Regular mood options
+                          ...moodOptions.map((mood) => GestureDetector(
+                            onTap: () => setModalState(() => selectedMood = mood),
+                            child: Container(
+                              width: 50,
+                              height: 50,
+                              decoration: BoxDecoration(
                                 color: selectedMood == mood 
-                                    ? const Color(0xFF8B5CF6)
-                                    : Colors.transparent,
-                                width: 2,
+                                    ? const Color(0xFF8B5CF6).withValues(alpha: 0.1)
+                                    : const Color(0xFFF3F4F6),
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: selectedMood == mood 
+                                      ? const Color(0xFF8B5CF6)
+                                      : Colors.transparent,
+                                  width: 2,
+                                ),
+                              ),
+                              child: Center(
+                                child: Text(mood, style: const TextStyle(fontSize: 24)),
                               ),
                             ),
-                            child: Center(
-                              child: Text(mood, style: const TextStyle(fontSize: 24)),
+                          )).toList(),
+                          // Plus button for custom emoji
+                          GestureDetector(
+                            onTap: () => _showEmojiPicker(context, setModalState),
+                            child: Container(
+                              width: 50,
+                              height: 50,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF3F4F6),
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: const Color(0xFF8B5CF6).withValues(alpha: 0.3),
+                                  width: 2,
+                                  style: BorderStyle.solid,
+                                ),
+                              ),
+                              child: const Center(
+                                child: Icon(
+                                  Icons.add,
+                                  color: Color(0xFF8B5CF6),
+                                  size: 24,
+                                ),
+                              ),
                             ),
                           ),
-                        )).toList(),
+                        ],
                       ),
                       
                       const SizedBox(height: 24),
@@ -465,17 +616,23 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
                 padding: const EdgeInsets.all(20),
                 child: Row(
                   children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF8B5CF6).withValues(alpha: 0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Center(
-                        child: Text(
-                          post.userAvatar,
-                          style: const TextStyle(fontSize: 18),
+                    GestureDetector(
+                      onTap: () => _showMainProfileExpansion(post.userAvatar, post.userName),
+                      child: Hero(
+                        tag: 'post_profile_${post.id}',
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF8B5CF6).withValues(alpha: 0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: Text(
+                              post.userAvatar,
+                              style: const TextStyle(fontSize: 18),
+                            ),
+                          ),
                         ),
                       ),
                     ),
@@ -734,6 +891,226 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
     });
   }
 
+  void _showEmojiPicker(BuildContext context, StateSetter setModalState) {
+    final List<String> popularEmojis = [
+      '😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣',
+      '😊', '😇', '🙂', '🙃', '😉', '😌', '😍', '🥰',
+      '😘', '😗', '😙', '😚', '😋', '😛', '😝', '😜',
+      '🤪', '🤨', '🧐', '🤓', '😎', '🤩', '🥳', '😏',
+      '😒', '😞', '😔', '😟', '😕', '🙁', '☹️', '😣',
+      '😖', '😫', '😩', '🥺', '😢', '😭', '😤', '😠',
+      '😡', '🤬', '🤯', '😳', '🥵', '🥶', '😱', '😨',
+      '😰', '😥', '😓', '🤗', '🤔', '🤭', '🤫', '🤥',
+      '😶', '😐', '😑', '😬', '🙄', '😯', '😦', '😧',
+      '😮', '😲', '🥱', '😴', '🤤', '😪', '😵', '🤐',
+      '🥴', '🤢', '🤮', '🤧', '😷', '🤒', '🤕', '🤑',
+      '🤠', '😈', '👿', '👹', '👺', '🤡', '💩', '👻',
+      '💀', '☠️', '👽', '👾', '🤖', '🎃', '😺', '😸',
+      '😹', '😻', '😼', '😽', '🙀', '😿', '😾', '💪',
+      '🦾', '🦿', '🦵', '🦶', '👂', '🦻', '👃', '🧠',
+      '🫀', '🫁', '🦷', '🦴', '👀', '👁️', '👅', '👄'
+    ];
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text(
+          'Choose Custom Emoji',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF2E3A59),
+          ),
+        ),
+        content: SizedBox(
+          width: double.maxFinite,
+          height: 300,
+          child: GridView.builder(
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 8,
+              childAspectRatio: 1,
+              crossAxisSpacing: 8,
+              mainAxisSpacing: 8,
+            ),
+            itemCount: popularEmojis.length,
+            itemBuilder: (context, index) {
+              final emoji = popularEmojis[index];
+              return GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _customMoodEmoji = emoji;
+                  });
+                  Navigator.pop(context);
+                  setModalState(() {}); // Refresh the post creation modal
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Custom emoji $emoji saved!'),
+                      backgroundColor: const Color(0xFF10B981),
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF9FAFB),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: const Color(0xFFE5E7EB),
+                      width: 1,
+                    ),
+                  ),
+                  child: Center(
+                    child: Text(
+                      emoji,
+                      style: const TextStyle(fontSize: 20),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: Color(0xFF6B7280)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showAddFriendsScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => _AddFriendsScreen(
+          potentialFriends: _potentialFriends,
+          friendRequests: _friendRequests,
+          sentRequests: _sentRequests,
+          onSendRequest: _sendFriendRequest,
+          onAcceptRequest: _acceptFriendRequest,
+          onDeclineRequest: _declineFriendRequest,
+        ),
+      ),
+    );
+  }
+
+  void _sendFriendRequest(String friendId) {
+    setState(() {
+      _sentRequests.add(friendId);
+      final friendIndex = _potentialFriends.indexWhere((f) => f.id == friendId);
+      if (friendIndex != -1) {
+        final friend = _potentialFriends[friendIndex];
+        _potentialFriends[friendIndex] = PotentialFriend(
+          id: friend.id,
+          name: friend.name,
+          avatar: friend.avatar,
+          bio: friend.bio,
+          mutualFriends: friend.mutualFriends,
+          commonInterests: friend.commonInterests,
+          isRequested: true,
+        );
+      }
+    });
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Friend request sent!'),
+        backgroundColor: Color(0xFF10B981),
+      ),
+    );
+  }
+
+  void _acceptFriendRequest(String requestId) {
+    setState(() {
+      final requestIndex = _friendRequests.indexWhere((r) => r.id == requestId);
+      if (requestIndex != -1) {
+        final request = _friendRequests[requestIndex];
+        
+        // Add to friends list
+        _friends.add(CommunityUser(
+          id: request.userId,
+          name: request.userName,
+          avatar: request.userAvatar,
+          currentMood: '😊',
+          streakDays: 1,
+          lastActivity: 'Just now',
+          isOnline: true,
+          achievements: ['New friend'],
+        ));
+        
+        // Remove from requests
+        _friendRequests.removeAt(requestIndex);
+      }
+    });
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Friend request accepted!'),
+        backgroundColor: Color(0xFF10B981),
+      ),
+    );
+  }
+
+  void _declineFriendRequest(String requestId) {
+    setState(() {
+      _friendRequests.removeWhere((r) => r.id == requestId);
+    });
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Friend request declined'),
+        backgroundColor: Color(0xFF6B7280),
+      ),
+    );
+  }
+
+  void _showMainProfileExpansion(String avatar, String name) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.8),
+      builder: (context) => GestureDetector(
+        onTap: () => Navigator.pop(context),
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          body: Center(
+            child: GestureDetector(
+              onTap: () {}, // Prevent dialog from closing when tapping the content
+              child: Hero(
+                tag: 'profile_expanded',
+                child: Container(
+                  width: 200,
+                  height: 200,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF8B5CF6).withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.3),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: Text(
+                      avatar,
+                      style: const TextStyle(fontSize: 80),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -782,11 +1159,7 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
               Icons.person_add_rounded,
               color: Color(0xFF6B7280),
             ),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Add friends coming soon!')),
-              );
-            },
+            onPressed: () => _showAddFriendsScreen(),
           ),
         ],
         bottom: TabBar(
@@ -955,17 +1328,23 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
           // User header
           Row(
             children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFF3F4F6),
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: Text(
-                    post.userAvatar,
-                    style: const TextStyle(fontSize: 18),
+              GestureDetector(
+                onTap: () => _showMainProfileExpansion(post.userAvatar, post.userName),
+                child: Hero(
+                  tag: 'activity_profile_${post.id}',
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFF3F4F6),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Text(
+                        post.userAvatar,
+                        style: const TextStyle(fontSize: 18),
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -1225,37 +1604,43 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
       ),
       child: Row(
         children: [
-          Stack(
-            children: [
-              Container(
-                width: 50,
-                height: 50,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFF3F4F6),
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: Text(
-                    friend.avatar,
-                    style: const TextStyle(fontSize: 20),
-                  ),
-                ),
-              ),
-              if (friend.isOnline)
-                Positioned(
-                  bottom: 2,
-                  right: 2,
+          GestureDetector(
+            onTap: () => _showMainProfileExpansion(friend.avatar, friend.name),
+            child: Stack(
+              children: [
+                Hero(
+                  tag: 'main_profile_${friend.id}',
                   child: Container(
-                    width: 12,
-                    height: 12,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF10B981),
+                    width: 50,
+                    height: 50,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFF3F4F6),
                       shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 2),
+                    ),
+                    child: Center(
+                      child: Text(
+                        friend.avatar,
+                        style: const TextStyle(fontSize: 20),
+                      ),
                     ),
                   ),
                 ),
-            ],
+                if (friend.isOnline)
+                  Positioned(
+                    bottom: 2,
+                    right: 2,
+                    child: Container(
+                      width: 12,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF10B981),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 2),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -1629,6 +2014,651 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
       return '${difference.inHours}h ago';
     } else {
       return '${difference.inDays}d ago';
+    }
+  }
+}
+
+class _AddFriendsScreen extends StatefulWidget {
+  final List<PotentialFriend> potentialFriends;
+  final List<FriendRequest> friendRequests;
+  final Set<String> sentRequests;
+  final Function(String) onSendRequest;
+  final Function(String) onAcceptRequest;
+  final Function(String) onDeclineRequest;
+
+  const _AddFriendsScreen({
+    required this.potentialFriends,
+    required this.friendRequests,
+    required this.sentRequests,
+    required this.onSendRequest,
+    required this.onAcceptRequest,
+    required this.onDeclineRequest,
+  });
+
+  @override
+  State<_AddFriendsScreen> createState() => _AddFriendsScreenState();
+}
+
+class _AddFriendsScreenState extends State<_AddFriendsScreen> with TickerProviderStateMixin {
+  late TabController _tabController;
+  final TextEditingController _searchController = TextEditingController();
+  List<PotentialFriend> _filteredFriends = [];
+  List<FriendRequest> _currentFriendRequests = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this);
+    _filteredFriends = widget.potentialFriends;
+    _currentFriendRequests = List.from(widget.friendRequests);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _filterFriends(String query) {
+    setState(() {
+      if (query.isEmpty) {
+        _filteredFriends = widget.potentialFriends;
+      } else {
+        _filteredFriends = widget.potentialFriends
+            .where((friend) =>
+                friend.name.toLowerCase().contains(query.toLowerCase()) ||
+                friend.bio.toLowerCase().contains(query.toLowerCase()) ||
+                friend.commonInterests.any((interest) =>
+                    interest.toLowerCase().contains(query.toLowerCase())))
+            .toList();
+      }
+    });
+  }
+
+  void _handleAcceptRequest(String requestId) {
+    setState(() {
+      _currentFriendRequests.removeWhere((request) => request.id == requestId);
+    });
+    widget.onAcceptRequest(requestId);
+  }
+
+  void _handleDeclineRequest(String requestId) {
+    setState(() {
+      _currentFriendRequests.removeWhere((request) => request.id == requestId);
+    });
+    widget.onDeclineRequest(requestId);
+  }
+
+  void _showProfileExpansion(String avatar, String name) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.8),
+      builder: (context) => GestureDetector(
+        onTap: () => Navigator.pop(context),
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          body: Center(
+            child: GestureDetector(
+              onTap: () {}, // Prevent dialog from closing when tapping the content
+              child: Hero(
+                tag: 'profile_expanded',
+                child: Container(
+                  width: 200,
+                  height: 200,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF8B5CF6).withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.3),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: Text(
+                      avatar,
+                      style: const TextStyle(fontSize: 80),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF5F7FA),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF2E3A59)),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text(
+          'Add Friends',
+          style: TextStyle(
+            color: Color(0xFF2E3A59),
+            fontSize: 24,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        centerTitle: false,
+        bottom: TabBar(
+          controller: _tabController,
+          indicatorColor: const Color(0xFF8B5CF6),
+          labelColor: const Color(0xFF8B5CF6),
+          unselectedLabelColor: const Color(0xFF6B7280),
+          tabs: [
+            Tab(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.search, size: 18),
+                  const SizedBox(width: 8),
+                  const Text('Discover'),
+                ],
+              ),
+            ),
+            Tab(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.person_add, size: 18),
+                  const SizedBox(width: 8),
+                  Text('Requests (${widget.friendRequests.length})'),
+                ],
+              ),
+            ),
+            Tab(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.people, size: 18),
+                  const SizedBox(width: 8),
+                  const Text('Suggested'),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          _buildDiscoverTab(),
+          _buildRequestsTab(),
+          _buildSuggestedTab(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDiscoverTab() {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          // Search Bar
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: TextField(
+              controller: _searchController,
+              onChanged: _filterFriends,
+              decoration: const InputDecoration(
+                hintText: 'Search by name, interests, or bio...',
+                border: InputBorder.none,
+                icon: Icon(Icons.search, color: Color(0xFF8B5CF6)),
+                hintStyle: TextStyle(color: Color(0xFF9CA3AF)),
+              ),
+              style: const TextStyle(
+                color: Color(0xFF2E3A59),
+                fontSize: 16,
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          // Results
+          Expanded(
+            child: _filteredFriends.isEmpty
+                ? const Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.search_off,
+                          size: 60,
+                          color: Color(0xFFE5E7EB),
+                        ),
+                        SizedBox(height: 16),
+                        Text(
+                          'No users found',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Color(0xFF6B7280),
+                          ),
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          'Try different search terms',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Color(0xFF9CA3AF),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : ListView.builder(
+                    itemCount: _filteredFriends.length,
+                    itemBuilder: (context, index) =>
+                        _buildPotentialFriendCard(_filteredFriends[index]),
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRequestsTab() {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: _currentFriendRequests.isEmpty
+          ? const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.inbox,
+                    size: 60,
+                    color: Color(0xFFE5E7EB),
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    'No friend requests',
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: Color(0xFF6B7280),
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'When someone sends you a friend request, it will appear here',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Color(0xFF9CA3AF),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          : ListView.builder(
+              itemCount: _currentFriendRequests.length,
+              itemBuilder: (context, index) {
+                // Safety check to prevent RangeError
+                if (index >= _currentFriendRequests.length) {
+                  return const SizedBox.shrink();
+                }
+                return _buildFriendRequestCard(_currentFriendRequests[index]);
+              },
+            ),
+    );
+  }
+
+  Widget _buildSuggestedTab() {
+    final suggestedFriends = widget.potentialFriends
+        .where((friend) => friend.mutualFriends > 0)
+        .toList()
+      ..sort((a, b) => b.mutualFriends.compareTo(a.mutualFriends));
+
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'People you may know',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF2E3A59),
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Based on mutual friends and shared interests',
+            style: TextStyle(
+              fontSize: 14,
+              color: Color(0xFF6B7280),
+            ),
+          ),
+          const SizedBox(height: 20),
+          Expanded(
+            child: ListView.builder(
+              itemCount: suggestedFriends.length,
+              itemBuilder: (context, index) =>
+                  _buildPotentialFriendCard(suggestedFriends[index]),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPotentialFriendCard(PotentialFriend friend) {
+    final isRequested = friend.isRequested || widget.sentRequests.contains(friend.id);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // User Header
+          Row(
+            children: [
+              GestureDetector(
+                onTap: () => _showProfileExpansion(friend.avatar, friend.name),
+                child: Hero(
+                  tag: 'profile_${friend.id}',
+                  child: Container(
+                    width: 60,
+                    height: 60,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF8B5CF6).withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Text(
+                        friend.avatar,
+                        style: const TextStyle(fontSize: 28),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      friend.name,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF2E3A59),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    if (friend.mutualFriends > 0)
+                      Text(
+                        '${friend.mutualFriends} mutual friend${friend.mutualFriends == 1 ? '' : 's'}',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Color(0xFF8B5CF6),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              // Add Friend Button
+              ElevatedButton(
+                onPressed: isRequested ? null : () => widget.onSendRequest(friend.id),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: isRequested ? const Color(0xFFE5E7EB) : const Color(0xFF8B5CF6),
+                  foregroundColor: isRequested ? const Color(0xFF6B7280) : Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+                child: Text(
+                  isRequested ? 'Requested' : 'Add Friend',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 16),
+
+          // Bio
+          Text(
+            friend.bio,
+            style: const TextStyle(
+              fontSize: 14,
+              color: Color(0xFF4B5563),
+              height: 1.4,
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          // Common Interests
+          if (friend.commonInterests.isNotEmpty) ...[
+            const Text(
+              'Common Interests',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF6B7280),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 4,
+              children: friend.commonInterests.map((interest) => Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF8B5CF6).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  interest,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF8B5CF6),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              )).toList(),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFriendRequestCard(FriendRequest request) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // User Header
+          Row(
+            children: [
+              GestureDetector(
+                onTap: () => _showProfileExpansion(request.userAvatar, request.userName),
+                child: Hero(
+                  tag: 'profile_${request.id}',
+                  child: Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF8B5CF6).withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Text(
+                        request.userAvatar,
+                        style: const TextStyle(fontSize: 24),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      request.userName,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF2E3A59),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _formatTimestamp(request.timestamp),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF6B7280),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 16),
+
+          // Message
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF9FAFB),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              request.message,
+              style: const TextStyle(
+                fontSize: 14,
+                color: Color(0xFF4B5563),
+                height: 1.4,
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          // Action Buttons
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => _handleDeclineRequest(request.id),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: Color(0xFFE5E7EB)),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'Decline',
+                    style: TextStyle(
+                      color: Color(0xFF6B7280),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () => _handleAcceptRequest(request.id),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF8B5CF6),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'Accept',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatTimestamp(DateTime timestamp) {
+    final now = DateTime.now();
+    final difference = now.difference(timestamp);
+    
+    if (difference.inMinutes < 1) {
+      return 'Just now';
+    } else if (difference.inHours < 1) {
+      return '${difference.inMinutes}m ago';
+    } else if (difference.inDays < 1) {
+      return '${difference.inHours}h ago';
+    } else if (difference.inDays < 7) {
+      return '${difference.inDays}d ago';
+    } else {
+      return '${timestamp.day}/${timestamp.month}/${timestamp.year}';
     }
   }
 }
