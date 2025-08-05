@@ -5,6 +5,8 @@ import 'package:pulsebreak_plus/shared/widgets/activity_summary_grid.dart';
 import 'package:pulsebreak_plus/shared/widgets/todays_focus_section.dart';
 import 'package:pulsebreak_plus/shared/widgets/motivation_banner.dart';
 import 'package:pulsebreak_plus/services/mood_service.dart';
+import 'package:pulsebreak_plus/services/auth_service.dart';
+import 'package:pulsebreak_plus/services/user_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -16,11 +18,31 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedTabIndex = 0;
   final List<String> _tabs = ['Daily Summary', 'Check-ins', 'Nutrition', 'Sleep'];
+  String _firstName = '';
 
   @override
   void initState() {
     super.initState();
     MoodService.instance.addListener(_onMoodChanged);
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    final user = AuthService.instance.currentUser;
+    if (user != null) {
+      final userModel = await UserService.instance.getUserProfile(user.uid);
+      if (userModel != null && mounted) {
+        setState(() {
+          _firstName = userModel.firstName;
+        });
+      } else if (mounted) {
+        // Fallback to Firebase Auth display name if Firestore fails
+        final displayName = user.displayName ?? '';
+        setState(() {
+          _firstName = displayName.split(' ').first;
+        });
+      }
+    }
   }
 
   @override
@@ -36,22 +58,22 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildTabContent() {
     switch (_selectedTabIndex) {
       case 0: // Daily Summary
-        return Column(
+        return const Column(
           children: [
             // Wellness Score Card
-            const WellnessScoreCard(),
-            const SizedBox(height: 24),
+            WellnessScoreCard(),
+            SizedBox(height: 24),
             
             // Activity Summary Grid
-            const ActivitySummaryGrid(),
-            const SizedBox(height: 24),
+            ActivitySummaryGrid(),
+            SizedBox(height: 24),
             
             // Today's Focus Section
-            const TodaysFocusSection(),
-            const SizedBox(height: 24),
+            TodaysFocusSection(),
+            SizedBox(height: 24),
             
             // Motivation Banner
-            const MotivationBanner(),
+            MotivationBanner(),
           ],
         );
         
@@ -72,17 +94,17 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
+                  const Row(
                     children: [
-                      const Icon(Icons.assignment_turned_in, color: Color(0xFF10B981), size: 28),
-                      const SizedBox(width: 12),
-                      const Text('Recent Check-ins', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF2E3A59))),
+                      Icon(Icons.assignment_turned_in, color: Color(0xFF10B981), size: 28),
+                      SizedBox(width: 12),
+                      Text('Recent Check-ins', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF2E3A59))),
                     ],
                   ),
                   const SizedBox(height: 16),
-                  _buildCheckInItem('Mood Check-in', '2 hours ago', '😊 Happy', Color(0xFF10B981)),
-                  _buildCheckInItem('Energy Level', '4 hours ago', '⚡ High Energy', Color(0xFFEAB308)),
-                  _buildCheckInItem('Stress Level', '6 hours ago', '😌 Low Stress', Color(0xFF8B5CF6)),
+                  _buildCheckInItem('Mood Check-in', '2 hours ago', '😊 Happy', const Color(0xFF10B981)),
+                  _buildCheckInItem('Energy Level', '4 hours ago', '⚡ High Energy', const Color(0xFFEAB308)),
+                  _buildCheckInItem('Stress Level', '6 hours ago', '😌 Low Stress', const Color(0xFF8B5CF6)),
                 ],
               ),
             ),
@@ -103,11 +125,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: 16),
                   Row(
                     children: [
-                      Expanded(child: _buildQuickCheckInButton('Mood', Icons.sentiment_satisfied, Color(0xFF8B5CF6))),
+                      Expanded(child: _buildQuickCheckInButton('Mood', Icons.sentiment_satisfied, const Color(0xFF8B5CF6))),
                       const SizedBox(width: 12),
-                      Expanded(child: _buildQuickCheckInButton('Energy', Icons.bolt, Color(0xFFEAB308))),
+                      Expanded(child: _buildQuickCheckInButton('Energy', Icons.bolt, const Color(0xFFEAB308))),
                       const SizedBox(width: 12),
-                      Expanded(child: _buildQuickCheckInButton('Stress', Icons.psychology, Color(0xFF0EA5E9))),
+                      Expanded(child: _buildQuickCheckInButton('Stress', Icons.psychology, const Color(0xFF0EA5E9))),
                     ],
                   ),
                 ],
@@ -133,19 +155,19 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
+                  const Row(
                     children: [
-                      const Icon(Icons.restaurant, color: Color(0xFF10B981), size: 28),
-                      const SizedBox(width: 12),
-                      const Text('Today\'s Nutrition', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF2E3A59))),
+                      Icon(Icons.restaurant, color: Color(0xFF10B981), size: 28),
+                      SizedBox(width: 12),
+                      Text('Today\'s Nutrition', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF2E3A59))),
                     ],
                   ),
                   const SizedBox(height: 16),
                   Row(
                     children: [
-                      Expanded(child: _buildNutritionStat('Calories', '1,540', '/ 2,000', Color(0xFF10B981))),
-                      Expanded(child: _buildNutritionStat('Protein', '89g', '/ 120g', Color(0xFF0EA5E9))),
-                      Expanded(child: _buildNutritionStat('Water', '1.7L', '/ 2.0L', Color(0xFF8B5CF6))),
+                      Expanded(child: _buildNutritionStat('Calories', '1,540', '/ 2,000', const Color(0xFF10B981))),
+                      Expanded(child: _buildNutritionStat('Protein', '89g', '/ 120g', const Color(0xFF0EA5E9))),
+                      Expanded(child: _buildNutritionStat('Water', '1.7L', '/ 2.0L', const Color(0xFF8B5CF6))),
                     ],
                   ),
                 ],
@@ -192,19 +214,19 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
+                  const Row(
                     children: [
-                      const Icon(Icons.bedtime, color: Color(0xFF8B5CF6), size: 28),
-                      const SizedBox(width: 12),
-                      const Text('Last Night\'s Sleep', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF2E3A59))),
+                      Icon(Icons.bedtime, color: Color(0xFF8B5CF6), size: 28),
+                      SizedBox(width: 12),
+                      Text('Last Night\'s Sleep', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF2E3A59))),
                     ],
                   ),
                   const SizedBox(height: 16),
                   Row(
                     children: [
-                      Expanded(child: _buildSleepStat('Duration', '7h 23m', 'Good', Color(0xFF10B981))),
-                      Expanded(child: _buildSleepStat('Quality', '85%', 'Excellent', Color(0xFF8B5CF6))),
-                      Expanded(child: _buildSleepStat('Deep Sleep', '2h 15m', 'Normal', Color(0xFF0EA5E9))),
+                      Expanded(child: _buildSleepStat('Duration', '7h 23m', 'Good', const Color(0xFF10B981))),
+                      Expanded(child: _buildSleepStat('Quality', '85%', 'Excellent', const Color(0xFF8B5CF6))),
+                      Expanded(child: _buildSleepStat('Deep Sleep', '2h 15m', 'Normal', const Color(0xFF0EA5E9))),
                     ],
                   ),
                 ],
@@ -376,10 +398,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 // Greeting Header
                 Row(
                   children: [
-                    const Expanded(
+                    Expanded(
                       child: Text(
-                        'Hello, Paul!',
-                        style: TextStyle(
+                        _firstName.isNotEmpty ? 'Hello, $_firstName!' : 'Hello!',
+                        style: const TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.w700,
                           color: Color(0xFF2E3A59),

@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/theme/text_styles.dart';
+import '../../services/auth_service.dart';
 import '../widgets/animated_logo.dart';
 import '../widgets/animated_background.dart';
 import '../widgets/loading_indicator.dart';
 import 'onboarding_screen.dart';
+import '../dashboard/main_navigation.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -52,23 +54,50 @@ class _SplashScreenState extends State<SplashScreen>
   void _startSplashSequence() {
     _logoController.forward();
 
-    Future.delayed(const Duration(milliseconds: 500), () {
+    Future<void>.delayed(const Duration(milliseconds: 500), () {
       if (mounted) {
         _fadeController.forward();
       }
     });
 
-    // Navigate to onboarding screen after 3 seconds
-    Future.delayed(const Duration(milliseconds: 3000), () {
+    // Check authentication status and navigate after 3 seconds
+    Future<void>.delayed(const Duration(milliseconds: 3000), () {
       if (mounted) {
+        _checkAuthAndNavigate();
+      }
+    });
+  }
+
+  Future<void> _checkAuthAndNavigate() async {
+    try {
+      final user = AuthService.instance.currentUser;
+      
+      if (user != null) {
+        // User is logged in, go to main app
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(
+          MaterialPageRoute<void>(
+            builder: (context) => const MainNavigation(),
+          ),
+        );
+      } else {
+        // User not logged in, go to onboarding
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute<void>(
             builder: (context) => const OnboardingScreen(),
           ),
         );
       }
-    });
+    } catch (e) {
+      // If there's an error, go to onboarding
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute<void>(
+          builder: (context) => const OnboardingScreen(),
+        ),
+      );
+    }
   }
 
   @override
@@ -81,7 +110,7 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
+      body: DecoratedBox(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
@@ -125,7 +154,7 @@ class _SplashScreenState extends State<SplashScreen>
                   // Tagline
                   FadeTransition(
                     opacity: _fadeAnimation,
-                    child: Text(
+                    child: const Text(
                       AppStrings.tagline,
                       style: AppTextStyles.splashSubtitle,
                       textAlign: TextAlign.center,

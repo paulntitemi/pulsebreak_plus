@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:pulsebreak_plus/features/onboarding/splash_screen.dart';
+import 'package:pulsebreak_plus/core/auth_wrapper.dart';
 import 'package:pulsebreak_plus/services/theme_service.dart';
 import 'package:pulsebreak_plus/services/settings_service.dart';
 import 'package:pulsebreak_plus/services/mood_service.dart';
+import 'package:pulsebreak_plus/services/firebase_service.dart';
+import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,7 +19,10 @@ void main() async {
 
   // Initialize Firebase
   try {
-    await Firebase.initializeApp();
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    await FirebaseService.instance.initialize();
     debugPrint('Firebase initialized successfully');
   } catch (e) {
     debugPrint('Firebase initialization failed: $e - continuing in demo mode');
@@ -107,7 +112,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       theme: ThemeService.lightTheme,
       darkTheme: ThemeService.darkTheme,
       themeMode: _themeService.themeMode,
-      home: const SplashScreen(),
+      home: const AuthWrapper(),
       // Add global error handling
       builder: (context, child) {
         ErrorWidget.builder = (FlutterErrorDetails errorDetails) {

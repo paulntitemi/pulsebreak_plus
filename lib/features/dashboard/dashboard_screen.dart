@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pulsebreak_plus/features/ai_coach/ai_chat_screen.dart';
+import 'package:pulsebreak_plus/services/auth_service.dart';
+import 'package:pulsebreak_plus/services/user_service.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -20,6 +22,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
   
   // Habit reminder state
   bool _habitReminderVisible = true;
+  
+  // User data
+  String _firstName = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    final user = AuthService.instance.currentUser;
+    if (user != null) {
+      final userModel = await UserService.instance.getUserProfile(user.uid);
+      if (userModel != null && mounted) {
+        setState(() {
+          _firstName = userModel.firstName;
+        });
+      } else if (mounted) {
+        // Fallback to Firebase Auth display name if Firestore fails
+        final displayName = user.displayName ?? '';
+        setState(() {
+          _firstName = displayName.split(' ').first;
+        });
+      }
+    }
+  }
   
   String _getGreeting() {
     final hour = DateTime.now().hour;
@@ -127,7 +156,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            '${_getGreeting()}, Paul 👋🏽',
+                            _firstName.isNotEmpty 
+                                ? '${_getGreeting()}, $_firstName 👋🏽' 
+                                : '${_getGreeting()}! 👋🏽',
                             style: const TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.w700,
@@ -393,7 +424,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     child: Column(
                       children: [
                         // Progress Ring
-                        Stack(
+                        const Stack(
                           alignment: Alignment.center,
                           children: [
                             SizedBox(
@@ -402,13 +433,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               child: CircularProgressIndicator(
                                 value: 0.75,
                                 strokeWidth: 8,
-                                backgroundColor: const Color(0xFFE5E7EB),
-                                valueColor: const AlwaysStoppedAnimation<Color>(
+                                backgroundColor: Color(0xFFE5E7EB),
+                                valueColor: AlwaysStoppedAnimation<Color>(
                                   Color(0xFF4F8A8B),
                                 ),
                               ),
                             ),
-                            const Column(
+                            Column(
                               children: [
                                 Text(
                                   '75%',

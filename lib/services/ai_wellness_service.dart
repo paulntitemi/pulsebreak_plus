@@ -231,7 +231,6 @@ class AIWellnessService {
             'Is there anything you\'d like support with?',
           ],
           moodScalePrompt: 'On a scale of 1-10, how would you rate your overall mood today?',
-          personalizationNote: null,
         ),
         suggestedActions: [],
       );

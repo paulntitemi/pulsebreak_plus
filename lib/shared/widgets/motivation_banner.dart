@@ -41,11 +41,11 @@ class MotivationBanner extends StatelessWidget {
               const SizedBox(width: 16),
               
               // Content
-              Expanded(
+              const Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Almost done!',
                       style: TextStyle(
                         fontSize: 16,
@@ -53,8 +53,8 @@ class MotivationBanner extends StatelessWidget {
                         color: Color(0xFF92400E),
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    const Text(
+                    SizedBox(height: 4),
+                    Text(
                       '1 check-in left to complete your day.',
                       style: TextStyle(
                         fontSize: 14,
@@ -109,16 +109,16 @@ class MotivationBanner extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: const Color(0xFFEAB308).withValues(alpha: 0.3)),
               ),
-              child: Row(
+              child: const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.emoji_events,
                     color: Color(0xFF92400E),
                     size: 16,
                   ),
-                  const SizedBox(width: 8),
-                  const Text(
+                  SizedBox(width: 8),
+                  Text(
                     'View Wellness Challenges',
                     style: TextStyle(
                       fontSize: 14,

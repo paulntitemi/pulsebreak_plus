@@ -86,17 +86,17 @@ class ThemeService extends ChangeNotifier {
   static ThemeData get lightTheme {
     return ThemeData(
       brightness: Brightness.light,
-      primarySwatch: MaterialColor(0xFF8B5CF6, {
-        50: const Color(0xFFF3E8FF),
-        100: const Color(0xFFE9D5FF),
-        200: const Color(0xFFD8B4FE),
-        300: const Color(0xFFC084FC),
-        400: const Color(0xFFA855F7),
-        500: const Color(0xFF8B5CF6),
-        600: const Color(0xFF7C3AED),
-        700: const Color(0xFF6D28D9),
-        800: const Color(0xFF5B21B6),
-        900: const Color(0xFF4C1D95),
+      primarySwatch: const MaterialColor(0xFF8B5CF6, {
+        50: Color(0xFFF3E8FF),
+        100: Color(0xFFE9D5FF),
+        200: Color(0xFFD8B4FE),
+        300: Color(0xFFC084FC),
+        400: Color(0xFFA855F7),
+        500: Color(0xFF8B5CF6),
+        600: Color(0xFF7C3AED),
+        700: Color(0xFF6D28D9),
+        800: Color(0xFF5B21B6),
+        900: Color(0xFF4C1D95),
       }),
       colorScheme: const ColorScheme.light(
         primary: Color(0xFF8B5CF6),
@@ -120,17 +120,17 @@ class ThemeService extends ChangeNotifier {
   static ThemeData get darkTheme {
     return ThemeData(
       brightness: Brightness.dark,
-      primarySwatch: MaterialColor(0xFF8B5CF6, {
-        50: const Color(0xFF4C1D95),
-        100: const Color(0xFF5B21B6),
-        200: const Color(0xFF6D28D9),
-        300: const Color(0xFF7C3AED),
-        400: const Color(0xFF8B5CF6),
-        500: const Color(0xFFA855F7),
-        600: const Color(0xFFC084FC),
-        700: const Color(0xFFD8B4FE),
-        800: const Color(0xFFE9D5FF),
-        900: const Color(0xFFF3E8FF),
+      primarySwatch: const MaterialColor(0xFF8B5CF6, {
+        50: Color(0xFF4C1D95),
+        100: Color(0xFF5B21B6),
+        200: Color(0xFF6D28D9),
+        300: Color(0xFF7C3AED),
+        400: Color(0xFF8B5CF6),
+        500: Color(0xFFA855F7),
+        600: Color(0xFFC084FC),
+        700: Color(0xFFD8B4FE),
+        800: Color(0xFFE9D5FF),
+        900: Color(0xFFF3E8FF),
       }),
       colorScheme: const ColorScheme.dark(
         primary: Color(0xFF8B5CF6),

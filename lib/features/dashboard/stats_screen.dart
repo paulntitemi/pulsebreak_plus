@@ -718,11 +718,11 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
             ),
             child: Row(
               children: [
-                Expanded(
+                const Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Wellness Challenges',
                         style: TextStyle(
                           fontSize: 18,
@@ -730,8 +730,8 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
                           color: Color(0xFF2E3A59),
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      const Text(
+                      SizedBox(height: 8),
+                      Text(
                         'Join friends in wellness goals',
                         style: TextStyle(
                           fontSize: 14,

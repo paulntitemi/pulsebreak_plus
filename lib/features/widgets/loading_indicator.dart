@@ -39,7 +39,7 @@ class _LoadingIndicatorState extends State<LoadingIndicator>
 
     // Start animations with delays
     for (int i = 0; i < _controllers.length; i++) {
-      Future.delayed(Duration(milliseconds: i * 160), () {
+      Future<void>.delayed(Duration(milliseconds: i * 160), () {
         if (mounted) {
           _controllers[i].repeat(reverse: true);
         }
@@ -71,7 +71,7 @@ class _LoadingIndicatorState extends State<LoadingIndicator>
                   child: Container(
                     width: 8,
                     height: 8,
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       shape: BoxShape.circle,
                       color: AppColors.loadingDot,
                     ),

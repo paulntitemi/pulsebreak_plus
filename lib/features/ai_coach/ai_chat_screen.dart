@@ -284,7 +284,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.more_vert, color: Color(0xFF2E3A59)),
-            onPressed: () => _showChatOptions(),
+            onPressed: _showChatOptions,
           ),
         ],
       ),

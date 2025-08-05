@@ -134,7 +134,7 @@ class _JournalScreenState extends State<JournalScreen> {
                           Icons.filter_list,
                           color: Color(0xFF6B7280),
                         ),
-                        onPressed: () => _showFilterDialog(),
+                        onPressed: _showFilterDialog,
                       ),
                     ],
                   ),
@@ -143,7 +143,7 @@ class _JournalScreenState extends State<JournalScreen> {
       ),
       body: _filteredEntries.isEmpty ? _buildEmptyState() : _buildJournalList(),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showCreateEntryDialog(),
+        onPressed: _showCreateEntryDialog,
         backgroundColor: const Color(0xFF8B5CF6),
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add),
@@ -686,7 +686,7 @@ class _JournalScreenState extends State<JournalScreen> {
 }
 
 class _CreateEntryModal extends StatefulWidget {
-  final Function(String title, String content, String mood, List<String> tags) onSave;
+  final void Function(String title, String content, String mood, List<String> tags) onSave;
 
   const _CreateEntryModal({required this.onSave});
 
@@ -1089,7 +1089,7 @@ class _FilterModal extends StatefulWidget {
   final String selectedTag;
   final DateTime? startDate;
   final DateTime? endDate;
-  final Function(String mood, String tag, DateTime? startDate, DateTime? endDate) onApplyFilters;
+  final void Function(String mood, String tag, DateTime? startDate, DateTime? endDate) onApplyFilters;
 
   const _FilterModal({
     required this.selectedMood,

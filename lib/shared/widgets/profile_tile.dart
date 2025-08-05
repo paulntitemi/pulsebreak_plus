@@ -74,9 +74,9 @@ class ProfileTile extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     subtitle,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 14,
-                      color: const Color(0xFF6B7280),
+                      color: Color(0xFF6B7280),
                       height: 1.3,
                     ),
                   ),
@@ -85,9 +85,9 @@ class ProfileTile extends StatelessWidget {
             ),
             
             // Arrow Icon
-            Icon(
+            const Icon(
               Icons.arrow_forward_ios,
-              color: const Color(0xFF9CA3AF),
+              color: Color(0xFF9CA3AF),
               size: 16,
             ),
           ],

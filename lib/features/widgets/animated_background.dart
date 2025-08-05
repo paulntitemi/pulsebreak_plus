@@ -39,7 +39,7 @@ class _AnimatedBackgroundState extends State<AnimatedBackground>
 
     // Start animations with different delays
     for (int i = 0; i < _particleControllers.length; i++) {
-      Future.delayed(Duration(milliseconds: i * 500), () {
+      Future<void>.delayed(Duration(milliseconds: i * 500), () {
         if (mounted) {
           _particleControllers[i].repeat();
         }
@@ -72,7 +72,7 @@ class _AnimatedBackgroundState extends State<AnimatedBackground>
                 child: Container(
                   width: 8,
                   height: 8,
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     shape: BoxShape.circle,
                     color: AppColors.particleColor,
                   ),
@@ -89,7 +89,7 @@ class _AnimatedBackgroundState extends State<AnimatedBackground>
           right: 0,
           child: Container(
             height: 100,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,

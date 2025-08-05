@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:pulsebreak_plus/shared/widgets/stat_card.dart';
 import 'package:pulsebreak_plus/shared/widgets/profile_tile.dart';
+import 'package:pulsebreak_plus/shared/widgets/profile_picture_widget.dart';
 import 'package:pulsebreak_plus/features/reminders/smart_reminders_screen.dart';
 import 'package:pulsebreak_plus/features/analytics/wellness_analytics_screen.dart';
 import 'package:pulsebreak_plus/features/settings/settings_screen.dart';
 import 'package:pulsebreak_plus/services/mood_service.dart';
+import 'package:pulsebreak_plus/services/auth_service.dart';
+import 'package:pulsebreak_plus/services/user_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -17,11 +20,15 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
+  String _displayName = '';
+  String _firstName = '';
+  String? _photoURL;
 
   @override
   void initState() {
     super.initState();
     MoodService.instance.addListener(_onMoodChanged);
+    _loadUserData();
     
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 800),
@@ -45,6 +52,20 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
     ));
     
     _animationController.forward();
+  }
+
+  Future<void> _loadUserData() async {
+    final user = AuthService.instance.currentUser;
+    if (user != null) {
+      final userModel = await UserService.instance.getUserProfile(user.uid);
+      if (userModel != null && mounted) {
+        setState(() {
+          _displayName = userModel.displayName;
+          _firstName = userModel.firstName;
+          _photoURL = userModel.photoURL;
+        });
+      }
+    }
   }
 
   @override
@@ -100,40 +121,22 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
     return Column(
       children: [
         // Profile Photo
-        Container(
-          width: 100,
-          height: 100,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Color(0xFF4F8A8B),
-                Color(0xFF188038),
-              ],
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF4F8A8B).withValues(alpha: 0.3),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: const Icon(
-            Icons.person,
-            color: Colors.white,
-            size: 50,
-          ),
+        ProfilePictureWidget(
+          imageUrl: _photoURL,
+          isEditable: true,
+          onImageUpdated: (String? newImageUrl) {
+            setState(() {
+              _photoURL = newImageUrl;
+            });
+          },
         ),
         
         const SizedBox(height: 16),
         
         // Name
-        const Text(
-          'Paul Nti',
-          style: TextStyle(
+        Text(
+          _displayName.isNotEmpty ? _displayName : 'User',
+          style: const TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.w700,
             color: Color(0xFF2E3A59),
@@ -144,16 +147,16 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
         const SizedBox(height: 8),
         
         // Location
-        Row(
+        const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               Icons.location_on,
               size: 16,
-              color: const Color(0xFF6B7280),
+              color: Color(0xFF6B7280),
             ),
-            const SizedBox(width: 4),
-            const Text(
+            SizedBox(width: 4),
+            Text(
               'Accra, Ghana',
               style: TextStyle(
                 fontSize: 16,
@@ -168,7 +171,7 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
   }
 
   Widget _buildStatsCards() {
-    return Column(
+    return const Column(
       children: [
         // First row - Check-ins and Streak
         Row(
@@ -178,34 +181,34 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
                 title: 'Check-ins',
                 subtitle: 'this week',
                 value: '12',
-                backgroundColor: const Color(0xFFECFDF5),
-                accentColor: const Color(0xFF10B981),
+                backgroundColor: Color(0xFFECFDF5),
+                accentColor: Color(0xFF10B981),
                 icon: Icons.check_circle_outline,
               ),
             ),
-            const SizedBox(width: 16),
+            SizedBox(width: 16),
             Expanded(
               child: StatCard(
                 title: 'Streak',
                 subtitle: 'days',
                 value: '7',
-                backgroundColor: const Color(0xFFEBF8FF),
-                accentColor: const Color(0xFF0EA5E9),
+                backgroundColor: Color(0xFFEBF8FF),
+                accentColor: Color(0xFF0EA5E9),
                 icon: Icons.local_fire_department,
               ),
             ),
           ],
         ),
         
-        const SizedBox(height: 16),
+        SizedBox(height: 16),
         
         // Second row - Average Mood (full width)
         StatCard(
           title: 'Avg Mood',
           subtitle: 'this week',
           value: '😊',
-          backgroundColor: const Color(0xFFFEF3C7),
-          accentColor: const Color(0xFFEAB308),
+          backgroundColor: Color(0xFFFEF3C7),
+          accentColor: Color(0xFFEAB308),
           icon: Icons.sentiment_satisfied,
           isFullWidth: true,
         ),
@@ -249,7 +252,7 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
           onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => const WellnessAnalyticsScreen()),
+              MaterialPageRoute<void>(builder: (context) => const WellnessAnalyticsScreen()),
             );
           },
         ),
@@ -312,7 +315,7 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
           onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => const SmartRemindersScreen()),
+              MaterialPageRoute<void>(builder: (context) => const SmartRemindersScreen()),
             );
           },
         ),
@@ -327,7 +330,7 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
           onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => const SettingsScreen()),
+              MaterialPageRoute<void>(builder: (context) => const SettingsScreen()),
             );
           },
         ),

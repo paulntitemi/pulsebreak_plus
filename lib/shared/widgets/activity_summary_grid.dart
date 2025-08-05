@@ -73,10 +73,10 @@ class _ActivitySummaryGridState extends State<ActivitySummaryGrid> {
                     child: const Icon(Icons.check_circle, color: Color(0xFF10B981), size: 24),
                   ),
                   const SizedBox(width: 16),
-                  Column(
+                  const Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Check-ins This Week',
                         style: TextStyle(
                           fontSize: 20,
@@ -88,7 +88,7 @@ class _ActivitySummaryGridState extends State<ActivitySummaryGrid> {
                         '12 total check-ins',
                         style: TextStyle(
                           fontSize: 14,
-                          color: const Color(0xFF6B7280),
+                          color: Color(0xFF6B7280),
                         ),
                       ),
                     ],
@@ -102,13 +102,13 @@ class _ActivitySummaryGridState extends State<ActivitySummaryGrid> {
               Expanded(
                 child: ListView(
                   children: [
-                    _buildDailyCheckIn('Today', '3 check-ins', 'Mood, Hydration, Energy', Color(0xFF10B981), true),
-                    _buildDailyCheckIn('Yesterday', '2 check-ins', 'Mood, Sleep Quality', Color(0xFF10B981), false),
-                    _buildDailyCheckIn('Tuesday', '3 check-ins', 'Mood, Hydration, Stress', Color(0xFF10B981), false),
-                    _buildDailyCheckIn('Monday', '2 check-ins', 'Mood, Energy', Color(0xFF10B981), false),
-                    _buildDailyCheckIn('Sunday', '1 check-in', 'Mood', Color(0xFFEAB308), false),
-                    _buildDailyCheckIn('Saturday', '1 check-in', 'Mood', Color(0xFFEAB308), false),
-                    _buildDailyCheckIn('Friday', '0 check-ins', 'No check-ins', Color(0xFFEF4444), false),
+                    _buildDailyCheckIn('Today', '3 check-ins', 'Mood, Hydration, Energy', const Color(0xFF10B981), true),
+                    _buildDailyCheckIn('Yesterday', '2 check-ins', 'Mood, Sleep Quality', const Color(0xFF10B981), false),
+                    _buildDailyCheckIn('Tuesday', '3 check-ins', 'Mood, Hydration, Stress', const Color(0xFF10B981), false),
+                    _buildDailyCheckIn('Monday', '2 check-ins', 'Mood, Energy', const Color(0xFF10B981), false),
+                    _buildDailyCheckIn('Sunday', '1 check-in', 'Mood', const Color(0xFFEAB308), false),
+                    _buildDailyCheckIn('Saturday', '1 check-in', 'Mood', const Color(0xFFEAB308), false),
+                    _buildDailyCheckIn('Friday', '0 check-ins', 'No check-ins', const Color(0xFFEF4444), false),
                   ],
                 ),
               ),
@@ -163,10 +163,10 @@ class _ActivitySummaryGridState extends State<ActivitySummaryGrid> {
                     child: const Icon(Icons.local_fire_department, color: Color(0xFFEAB308), size: 24),
                   ),
                   const SizedBox(width: 16),
-                  Column(
+                  const Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Current Streak',
                         style: TextStyle(
                           fontSize: 20,
@@ -178,7 +178,7 @@ class _ActivitySummaryGridState extends State<ActivitySummaryGrid> {
                         '7 days in a row',
                         style: TextStyle(
                           fontSize: 14,
-                          color: const Color(0xFF6B7280),
+                          color: Color(0xFF6B7280),
                         ),
                       ),
                     ],
@@ -192,13 +192,13 @@ class _ActivitySummaryGridState extends State<ActivitySummaryGrid> {
               Row(
                 children: [
                   Expanded(
-                    child: _buildStreakStat('Current', '7', 'days', Color(0xFFEAB308)),
+                    child: _buildStreakStat('Current', '7', 'days', const Color(0xFFEAB308)),
                   ),
                   Expanded(
-                    child: _buildStreakStat('Longest', '14', 'days', Color(0xFF10B981)),
+                    child: _buildStreakStat('Longest', '14', 'days', const Color(0xFF10B981)),
                   ),
                   Expanded(
-                    child: _buildStreakStat('This Month', '23', 'days', Color(0xFF8B5CF6)),
+                    child: _buildStreakStat('This Month', '23', 'days', const Color(0xFF8B5CF6)),
                   ),
                 ],
               ),
@@ -220,10 +220,10 @@ class _ActivitySummaryGridState extends State<ActivitySummaryGrid> {
               Expanded(
                 child: ListView(
                   children: [
-                    _buildStreakHistory('Current streak', '7 days', 'Started Jan 10, 2024', Color(0xFFEAB308), true),
-                    _buildStreakHistory('Previous streak', '14 days', 'Dec 20 - Jan 2, 2024', Color(0xFF10B981), false),
-                    _buildStreakHistory('November streak', '9 days', 'Nov 15 - Nov 23, 2023', Color(0xFF8B5CF6), false),
-                    _buildStreakHistory('October streak', '5 days', 'Oct 8 - Oct 12, 2023', Color(0xFF0EA5E9), false),
+                    _buildStreakHistory('Current streak', '7 days', 'Started Jan 10, 2024', const Color(0xFFEAB308), true),
+                    _buildStreakHistory('Previous streak', '14 days', 'Dec 20 - Jan 2, 2024', const Color(0xFF10B981), false),
+                    _buildStreakHistory('November streak', '9 days', 'Nov 15 - Nov 23, 2023', const Color(0xFF8B5CF6), false),
+                    _buildStreakHistory('October streak', '5 days', 'Oct 8 - Oct 12, 2023', const Color(0xFF0EA5E9), false),
                   ],
                 ),
               ),
@@ -434,7 +434,7 @@ class _ActivitySummaryGridState extends State<ActivitySummaryGrid> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const MoodCheckinScreen()),
+                    MaterialPageRoute<void>(builder: (context) => const MoodCheckinScreen()),
                   );
                 },
               ),
@@ -453,7 +453,7 @@ class _ActivitySummaryGridState extends State<ActivitySummaryGrid> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const HydrationScreen()),
+                    MaterialPageRoute<void>(builder: (context) => const HydrationScreen()),
                   );
                 },
               ),

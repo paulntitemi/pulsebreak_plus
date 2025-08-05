@@ -3,7 +3,6 @@ import 'package:pulsebreak_plus/shared/widgets/circular_mood_picker.dart';
 import 'package:pulsebreak_plus/shared/widgets/mood_category_card.dart';
 import 'package:pulsebreak_plus/services/mood_service.dart';
 import 'package:pulsebreak_plus/features/dashboard/main_navigation.dart';
-import 'dart:math' as math;
 
 class MoodCheckinScreen extends StatefulWidget {
   const MoodCheckinScreen({super.key});
@@ -112,14 +111,14 @@ class _MoodCheckinScreenState extends State<MoodCheckinScreen> {
                   ),
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: Column(
+                child: const Column(
                   children: [
-                    const Text(
+                    Text(
                       '✨',
                       style: TextStyle(fontSize: 32),
                     ),
-                    const SizedBox(height: 12),
-                    const Text(
+                    SizedBox(height: 12),
+                    Text(
                       'Take a moment to check in with yourself',
                       style: TextStyle(
                         fontSize: 16,
@@ -128,12 +127,12 @@ class _MoodCheckinScreenState extends State<MoodCheckinScreen> {
                       ),
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 4),
+                    SizedBox(height: 4),
                     Text(
                       'Your feelings matter and tracking them helps with mindfulness',
                       style: TextStyle(
                         fontSize: 14,
-                        color: const Color(0xFF6B7280),
+                        color: Color(0xFF6B7280),
                         height: 1.4,
                       ),
                       textAlign: TextAlign.center,
@@ -209,7 +208,7 @@ class _MoodCheckinScreenState extends State<MoodCheckinScreen> {
 
               const SizedBox(height: 16),
 
-              Container(
+              DecoratedBox(
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),

@@ -144,14 +144,14 @@ class _HydrationScreenState extends State<HydrationScreen> {
           
           const SizedBox(height: 8),
           
-          Row(
+          const Row(
             children: [
               Expanded(
                 child: Text(
                   'Goal: 2000ml daily to stay properly hydrated',
                   style: TextStyle(
                     fontSize: 14,
-                    color: const Color(0xFF6B7280),
+                    color: Color(0xFF6B7280),
                     height: 1.3,
                   ),
                 ),
@@ -159,7 +159,7 @@ class _HydrationScreenState extends State<HydrationScreen> {
               Icon(
                 Icons.info_outline,
                 size: 16,
-                color: const Color(0xFF6B7280),
+                color: Color(0xFF6B7280),
               ),
             ],
           ),
@@ -216,7 +216,7 @@ class _HydrationScreenState extends State<HydrationScreen> {
         
         const SizedBox(height: 16),
         
-        Container(
+        DecoratedBox(
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),

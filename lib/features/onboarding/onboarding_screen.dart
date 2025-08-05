@@ -1,5 +1,6 @@
 // lib/features/onboarding/screens/onboarding_screen.dart
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:pulsebreak_plus/features/auth/login_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -55,20 +56,32 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     }
   }
 
-  void _skipOnboarding() {
-    _pageController.animateToPage(
-      2,
-      duration: const Duration(milliseconds: 400),
-      curve: Curves.easeInOut,
-    );
+  void _skipOnboarding() async {
+    // Mark that user has seen onboarding
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('has_seen_onboarding', true);
+    
+    // Navigate directly to login screen
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute<void>(builder: (context) => const LoginScreen()),
+      );
+    }
   }
 
-  void _onGetStarted() {
+  void _onGetStarted() async {
+    // Mark that user has seen onboarding
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('has_seen_onboarding', true);
+    
     // Navigate to login screen
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute<void>(builder: (context) => const LoginScreen()),
-    );
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute<void>(builder: (context) => const LoginScreen()),
+      );
+    }
   }
 
   @override
@@ -79,7 +92,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
           // Background image with overlay
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 500),
-            child: Container(
+            child: DecoratedBox(
               key: ValueKey(_currentPage),
               decoration: BoxDecoration(
                 image: DecorationImage(
@@ -117,7 +130,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       if (_currentPage < 2)
-                        Container(
+                        DecoratedBox(
                           decoration: BoxDecoration(
                             color: Colors.white.withValues(alpha: 0.9),
                             borderRadius: BorderRadius.circular(20),
@@ -228,15 +241,15 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   Widget _buildSlide1() {
     return FadeTransition(
       opacity: _fadeAnimation,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 40),
+      child: const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 40),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const SizedBox(height: 450),
+            SizedBox(height: 450),
 
             // Title
-            const Text(
+            Text(
               'Start Your Day with Intention',
               style: TextStyle(
                 fontSize: 24,
@@ -254,10 +267,10 @@ class _OnboardingScreenState extends State<OnboardingScreen>
               textAlign: TextAlign.center,
             ),
 
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
 
             // Subtitle
-            const Text(
+            Text(
               'Morning check-ins help you stay mindful and focused.',
               style: TextStyle(
                 fontSize: 16,
@@ -282,15 +295,15 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   Widget _buildSlide2() {
     return FadeTransition(
       opacity: _fadeAnimation,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 40),
+      child: const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 40),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const SizedBox(height: 450),
+            SizedBox(height: 450),
 
             // Title
-            const Text(
+            Text(
               'Stay Balanced During the Day',
               style: TextStyle(
                 fontSize: 24,
@@ -308,10 +321,10 @@ class _OnboardingScreenState extends State<OnboardingScreen>
               textAlign: TextAlign.center,
             ),
 
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
 
             // Subtitle
-            const Text(
+            Text(
               'Track your mood, hydration, and energy in seconds.',
               style: TextStyle(
                 fontSize: 16,
@@ -336,15 +349,15 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   Widget _buildSlide3() {
     return FadeTransition(
       opacity: _fadeAnimation,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 40),
+      child: const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 40),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const SizedBox(height: 450),
+            SizedBox(height: 450),
 
             // Title
-            const Text(
+            Text(
               'Reflect and Recharge Every Evening',
               style: TextStyle(
                 fontSize: 24,
@@ -362,10 +375,10 @@ class _OnboardingScreenState extends State<OnboardingScreen>
               textAlign: TextAlign.center,
             ),
 
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
 
             // Subtitle
-            const Text(
+            Text(
               'Wind down with gratitude and reflection.',
               style: TextStyle(
                 fontSize: 16,

@@ -1,6 +1,8 @@
 // lib/features/auth/screens/signup_screen.dart
 import 'package:flutter/material.dart';
-// import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../../services/auth_service.dart';
+import '../dashboard/main_navigation.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -58,14 +60,24 @@ class _SignupScreenState extends State<SignupScreen> {
       });
 
       try {
-        // Simulate signup for demo
-        await Future<void>.delayed(const Duration(seconds: 1));
+        final result = await AuthService.instance.signUpWithEmail(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+          displayName: _nameController.text.trim(),
+        );
 
-        if (mounted) {
+        if (result != null && mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Account created! (Demo mode)'),
+              content: Text('Account created successfully!'),
               backgroundColor: Color(0xFF188038),
+            ),
+          );
+          
+          // Navigate to main app
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute<void>(
+              builder: (context) => const MainNavigation(),
             ),
           );
         }
@@ -73,7 +85,7 @@ class _SignupScreenState extends State<SignupScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Signup failed: ${e.toString()}'),
+              content: Text(e.toString()),
               backgroundColor: const Color(0xFFEF4444),
             ),
           );

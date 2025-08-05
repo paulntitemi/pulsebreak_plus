@@ -125,11 +125,11 @@ class _WellnessInsightsScreenState extends State<WellnessInsightsScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: _buildMetricCard('Mood', '8.2/10', 'Excellent', Color(0xFF10B981), Color(0xFFECFDF5)),
+                    child: _buildMetricCard('Mood', '8.2/10', 'Excellent', const Color(0xFF10B981), const Color(0xFFECFDF5)),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: _buildMetricCard('Sleep', '7.5h', 'Good', Color(0xFF8B5CF6), Color(0xFFF3E8FF)),
+                    child: _buildMetricCard('Sleep', '7.5h', 'Good', const Color(0xFF8B5CF6), const Color(0xFFF3E8FF)),
                   ),
                 ],
               ),
@@ -139,11 +139,11 @@ class _WellnessInsightsScreenState extends State<WellnessInsightsScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: _buildMetricCard('Hydration', '85%', 'Target', Color(0xFF0EA5E9), Color(0xFFEBF8FF)),
+                    child: _buildMetricCard('Hydration', '85%', 'Target', const Color(0xFF0EA5E9), const Color(0xFFEBF8FF)),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: _buildMetricCard('Activity', '12', 'Check-ins', Color(0xFFEAB308), Color(0xFFFEF3C7)),
+                    child: _buildMetricCard('Activity', '12', 'Check-ins', const Color(0xFFEAB308), const Color(0xFFFEF3C7)),
                   ),
                 ],
               ),
@@ -178,11 +178,11 @@ class _WellnessInsightsScreenState extends State<WellnessInsightsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
+                    const Row(
                       children: [
-                        const Icon(Icons.trending_up, color: Color(0xFF10B981), size: 24),
-                        const SizedBox(width: 12),
-                        const Text(
+                        Icon(Icons.trending_up, color: Color(0xFF10B981), size: 24),
+                        SizedBox(width: 12),
+                        Text(
                           '7-Day Trend',
                           style: TextStyle(
                             fontSize: 18,
@@ -193,10 +193,10 @@ class _WellnessInsightsScreenState extends State<WellnessInsightsScreen> {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    _buildTrendItem('Mood Consistency', '+15%', 'Your mood has been more stable this week', Color(0xFF10B981)),
-                    _buildTrendItem('Sleep Quality', '+8%', 'Better sleep patterns detected', Color(0xFF8B5CF6)),
-                    _buildTrendItem('Hydration Habit', '+22%', 'Excellent improvement in water intake', Color(0xFF0EA5E9)),
-                    _buildTrendItem('Check-in Frequency', '+5%', 'More consistent self-monitoring', Color(0xFFEAB308)),
+                    _buildTrendItem('Mood Consistency', '+15%', 'Your mood has been more stable this week', const Color(0xFF10B981)),
+                    _buildTrendItem('Sleep Quality', '+8%', 'Better sleep patterns detected', const Color(0xFF8B5CF6)),
+                    _buildTrendItem('Hydration Habit', '+22%', 'Excellent improvement in water intake', const Color(0xFF0EA5E9)),
+                    _buildTrendItem('Check-in Frequency', '+5%', 'More consistent self-monitoring', const Color(0xFFEAB308)),
                   ],
                 ),
               ),
@@ -231,11 +231,11 @@ class _WellnessInsightsScreenState extends State<WellnessInsightsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
+                    const Row(
                       children: [
-                        const Icon(Icons.psychology, color: Color(0xFF3B82F6), size: 24),
-                        const SizedBox(width: 12),
-                        const Text(
+                        Icon(Icons.psychology, color: Color(0xFF3B82F6), size: 24),
+                        SizedBox(width: 12),
+                        Text(
                           'Personalized Recommendations',
                           style: TextStyle(
                             fontSize: 18,
@@ -284,11 +284,11 @@ class _WellnessInsightsScreenState extends State<WellnessInsightsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
+                    const Row(
                       children: [
-                        const Icon(Icons.flag, color: Color(0xFFEAB308), size: 24),
-                        const SizedBox(width: 12),
-                        const Text(
+                        Icon(Icons.flag, color: Color(0xFFEAB308), size: 24),
+                        SizedBox(width: 12),
+                        Text(
                           'Weekly Goals',
                           style: TextStyle(
                             fontSize: 18,
@@ -299,10 +299,10 @@ class _WellnessInsightsScreenState extends State<WellnessInsightsScreen> {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    _buildGoalItem('Daily Mood Check-ins', '6/7', 0.86, Color(0xFF10B981)),
-                    _buildGoalItem('8+ Hours Sleep', '5/7', 0.71, Color(0xFF8B5CF6)),
-                    _buildGoalItem('2L Water Daily', '7/7', 1.0, Color(0xFF0EA5E9)),
-                    _buildGoalItem('3 Check-ins Daily', '4/7', 0.57, Color(0xFFEAB308)),
+                    _buildGoalItem('Daily Mood Check-ins', '6/7', 0.86, const Color(0xFF10B981)),
+                    _buildGoalItem('8+ Hours Sleep', '5/7', 0.71, const Color(0xFF8B5CF6)),
+                    _buildGoalItem('2L Water Daily', '7/7', 1.0, const Color(0xFF0EA5E9)),
+                    _buildGoalItem('3 Check-ins Daily', '4/7', 0.57, const Color(0xFFEAB308)),
                   ],
                 ),
               ),

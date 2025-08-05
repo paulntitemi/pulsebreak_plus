@@ -11,7 +11,7 @@ class _AIWellnessCoachScreenState extends State<AIWellnessCoachScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   
-  List<Map<String, dynamic>> _messages = [
+  final List<Map<String, dynamic>> _messages = [
     {
       'isUser': false,
       'message': 'Hello! I\'m your AI Wellness Coach. I\'m here to help you maintain healthy habits and reach your wellness goals. How can I assist you today?',
@@ -34,12 +34,12 @@ class _AIWellnessCoachScreenState extends State<AIWellnessCoachScreen> {
     _messageController.clear();
     
     // Simulate AI response
-    Future.delayed(const Duration(seconds: 1), () {
+    Future<void>.delayed(const Duration(seconds: 1), () {
       _simulateAIResponse(message);
     });
     
     // Scroll to bottom
-    Future.delayed(const Duration(milliseconds: 100), () {
+    Future<void>.delayed(const Duration(milliseconds: 100), () {
       _scrollController.animateTo(
         _scrollController.position.maxScrollExtent,
         duration: const Duration(milliseconds: 300),
@@ -79,7 +79,7 @@ class _AIWellnessCoachScreenState extends State<AIWellnessCoachScreen> {
     });
     
     // Scroll to bottom
-    Future.delayed(const Duration(milliseconds: 100), () {
+    Future<void>.delayed(const Duration(milliseconds: 100), () {
       if (_scrollController.hasClients) {
         _scrollController.animateTo(
           _scrollController.position.maxScrollExtent,
@@ -106,8 +106,8 @@ class _AIWellnessCoachScreenState extends State<AIWellnessCoachScreen> {
             Container(
               width: 40,
               height: 40,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
                   colors: [Color(0xFF8B5CF6), Color(0xFF3B82F6)],
                 ),
                 shape: BoxShape.circle,
@@ -185,7 +185,7 @@ class _AIWellnessCoachScreenState extends State<AIWellnessCoachScreen> {
             child: Row(
               children: [
                 Expanded(
-                  child: Container(
+                  child: DecoratedBox(
                     decoration: BoxDecoration(
                       color: const Color(0xFFF8F9FA),
                       borderRadius: BorderRadius.circular(24),
@@ -207,8 +207,8 @@ class _AIWellnessCoachScreenState extends State<AIWellnessCoachScreen> {
                 Container(
                   width: 48,
                   height: 48,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
                       colors: [Color(0xFF8B5CF6), Color(0xFF3B82F6)],
                     ),
                     shape: BoxShape.circle,
@@ -245,8 +245,8 @@ class _AIWellnessCoachScreenState extends State<AIWellnessCoachScreen> {
                 Container(
                   width: 32,
                   height: 32,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
                       colors: [Color(0xFF8B5CF6), Color(0xFF3B82F6)],
                     ),
                     shape: BoxShape.circle,
@@ -289,8 +289,8 @@ class _AIWellnessCoachScreenState extends State<AIWellnessCoachScreen> {
                 Container(
                   width: 32,
                   height: 32,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF10B981),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF10B981),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(Icons.person, color: Colors.white, size: 16),

@@ -55,7 +55,7 @@ class _DateSelectorState extends State<DateSelector> {
                     ? const Color(0xFF4F8A8B)
                     : Colors.white,
                 borderRadius: BorderRadius.circular(16),
-                border: (isToday as bool) && !isSelected
+                border: isToday && !isSelected
                     ? Border.all(color: const Color(0xFF4F8A8B), width: 2)
                     : null,
                 boxShadow: isSelected
@@ -98,7 +98,7 @@ class _DateSelectorState extends State<DateSelector> {
                           : const Color(0xFF2E3A59),
                     ),
                   ),
-                  if ((isToday as bool) && !isSelected) ...[
+                  if (isToday && !isSelected) ...[
                     const SizedBox(height: 2),
                     Container(
                       width: 4,

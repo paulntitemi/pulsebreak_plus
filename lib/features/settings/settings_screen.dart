@@ -1,11 +1,15 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:pulsebreak_plus/services/settings_service.dart';
 import 'package:pulsebreak_plus/services/theme_service.dart';
+import 'package:pulsebreak_plus/services/auth_service.dart';
+import 'package:pulsebreak_plus/services/user_service.dart';
 import 'package:pulsebreak_plus/features/settings/edit_profile_screen.dart';
 import 'package:pulsebreak_plus/features/settings/notification_settings_screen.dart';
 import 'package:pulsebreak_plus/features/settings/help_center_screen.dart';
 import 'package:pulsebreak_plus/features/settings/privacy_policy_screen.dart';
 import 'package:pulsebreak_plus/features/settings/change_password_screen.dart';
+import 'package:pulsebreak_plus/features/auth/login_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -17,6 +21,27 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final SettingsService _settingsService = SettingsService.instance;
   final ThemeService _themeService = ThemeService.instance;
+  String _firstName = '';
+  String _userEmail = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    final user = AuthService.instance.currentUser;
+    if (user != null) {
+      final userModel = await UserService.instance.getUserProfile(user.uid);
+      if (userModel != null && mounted) {
+        setState(() {
+          _firstName = userModel.firstName;
+          _userEmail = userModel.email;
+        });
+      }
+    }
+  }
 
   final List<String> _languages = [
     'English',
@@ -127,17 +152,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _buildSettingsTile(
         icon: Icons.person_outline,
         title: 'Edit Profile',
-        subtitle: 'Update your personal information',
+        subtitle: _firstName.isNotEmpty 
+            ? 'Signed in as $_firstName' 
+            : 'Update your personal information',
         onTap: () => Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const EditProfileScreen()),
+          MaterialPageRoute<void>(builder: (context) => const EditProfileScreen()),
         ),
       ),
       _buildSettingsTile(
         icon: Icons.email_outlined,
         title: 'Change Email',
-        subtitle: _settingsService.userEmail,
-        onTap: () => _showComingSoon(),
+        subtitle: _userEmail.isNotEmpty ? _userEmail : _settingsService.userEmail,
+        onTap: _showComingSoon,
       ),
       _buildSettingsTile(
         icon: Icons.lock_outline,
@@ -145,14 +172,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
         subtitle: 'Update your account password',
         onTap: () => Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const ChangePasswordScreen()),
+          MaterialPageRoute<void>(builder: (context) => const ChangePasswordScreen()),
         ),
       ),
       _buildSettingsTile(
         icon: Icons.security,
         title: 'Two-Factor Authentication',
         subtitle: 'Secure your account',
-        onTap: () => _showComingSoon(),
+        onTap: _showComingSoon,
         trailing: Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
@@ -246,7 +273,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         subtitle: 'Customize notification preferences',
         onTap: () => Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const NotificationSettingsScreen()),
+          MaterialPageRoute<void>(builder: (context) => const NotificationSettingsScreen()),
         ),
       ),
     ]);
@@ -279,7 +306,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         icon: Icons.storage,
         title: 'Storage Usage',
         subtitle: '${_settingsService.totalStorageUsed.toInt()} MB used',
-        onTap: () => _showStorageDetails(),
+        onTap: _showStorageDetails,
       ),
     ]);
   }
@@ -306,7 +333,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         subtitle: 'Read our privacy policy',
         onTap: () => Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const PrivacyPolicyScreen()),
+          MaterialPageRoute<void>(builder: (context) => const PrivacyPolicyScreen()),
         ),
       ),
       _buildDropdownTile(
@@ -324,7 +351,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         icon: Icons.file_download_outlined,
         title: 'Export My Data',
         subtitle: 'Download all your wellness data',
-        onTap: () => _showExportDialog(),
+        onTap: _showExportDialog,
       ),
     ]);
   }
@@ -337,26 +364,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
         subtitle: 'Get help and find answers',
         onTap: () => Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const HelpCenterScreen()),
+          MaterialPageRoute<void>(builder: (context) => const HelpCenterScreen()),
         ),
       ),
       _buildSettingsTile(
         icon: Icons.feedback_outlined,
         title: 'Send Feedback',
         subtitle: 'Share your thoughts with us',
-        onTap: () => _showFeedbackDialog(),
+        onTap: _showFeedbackDialog,
       ),
       _buildSettingsTile(
         icon: Icons.star_outline,
         title: 'Rate the App',
         subtitle: 'Leave a review on the app store',
-        onTap: () => _showComingSoon(),
+        onTap: _showComingSoon,
       ),
       _buildSettingsTile(
         icon: Icons.info_outline,
         title: 'About',
         subtitle: 'Version 1.0.0 (Build 1)',
-        onTap: () => _showAboutDialog(),
+        onTap: _showAboutDialog,
       ),
     ]);
   }
@@ -367,14 +394,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
         icon: Icons.logout,
         title: 'Sign Out',
         subtitle: 'Sign out of your account',
-        onTap: () => _showSignOutDialog(),
+        onTap: _showSignOutDialog,
         titleColor: const Color(0xFFEF4444),
       ),
       _buildSettingsTile(
         icon: Icons.delete_forever,
         title: 'Delete Account',
         subtitle: 'Permanently delete your account',
-        onTap: () => _showDeleteAccountDialog(),
+        onTap: _showDeleteAccountDialog,
         titleColor: const Color(0xFFEF4444),
       ),
     ]);
@@ -707,7 +734,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showSignOutDialog() {
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Sign Out'),
@@ -718,12 +745,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              // Handle sign out
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Signed out successfully')),
+            onPressed: () async {
+              Navigator.pop(context); // Close confirmation dialog
+              
+              debugPrint('Starting sign out process...');
+              
+              // Try to sign out but don't wait if it hangs
+              AuthService.instance.signOut().timeout(
+                const Duration(seconds: 2),
+                onTimeout: () {
+                  debugPrint('AuthService.signOut() timed out, continuing with navigation');
+                },
               );
+              
+              // Navigate immediately to login screen
+              if (context.mounted) {
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute<void>(builder: (context) => const LoginScreen()),
+                  (route) => false,
+                );
+                debugPrint('Navigated to login screen');
+              }
             },
             style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFEF4444)),
             child: const Text('Sign Out'),

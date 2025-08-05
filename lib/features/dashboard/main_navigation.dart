@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:pulsebreak_plus/features/home/home_screen.dart';
 import 'package:pulsebreak_plus/features/dashboard/community_screen.dart';
 import 'package:pulsebreak_plus/features/dashboard/journal_screen.dart';
-import 'package:pulsebreak_plus/features/dashboard/settings_screen.dart';
 import 'package:pulsebreak_plus/features/profile/profile_screen.dart';
 import 'package:pulsebreak_plus/services/mood_service.dart';
 

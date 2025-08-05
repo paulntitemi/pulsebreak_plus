@@ -158,14 +158,14 @@ class _WellnessAnalyticsScreenState extends State<WellnessAnalyticsScreen> with 
               ),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: Column(
+            child: const Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.auto_awesome, color: Colors.white, size: 24),
-                    const SizedBox(width: 12),
-                    const Text(
+                    Icon(Icons.auto_awesome, color: Colors.white, size: 24),
+                    SizedBox(width: 12),
+                    Text(
                       'Wellness Score',
                       style: TextStyle(
                         fontSize: 20,
@@ -173,8 +173,8 @@ class _WellnessAnalyticsScreenState extends State<WellnessAnalyticsScreen> with 
                         color: Colors.white,
                       ),
                     ),
-                    const Spacer(),
-                    const Text(
+                    Spacer(),
+                    Text(
                       '85',
                       style: TextStyle(
                         fontSize: 32,
@@ -184,8 +184,8 @@ class _WellnessAnalyticsScreenState extends State<WellnessAnalyticsScreen> with 
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
-                const Text(
+                SizedBox(height: 16),
+                Text(
                   'Excellent progress! You\'re consistently meeting your wellness goals.',
                   style: TextStyle(
                     fontSize: 14,
@@ -193,12 +193,12 @@ class _WellnessAnalyticsScreenState extends State<WellnessAnalyticsScreen> with 
                     height: 1.4,
                   ),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 Row(
                   children: [
-                    const Icon(Icons.trending_up, color: Colors.white, size: 16),
-                    const SizedBox(width: 4),
-                    const Text(
+                    Icon(Icons.trending_up, color: Colors.white, size: 16),
+                    SizedBox(width: 4),
+                    Text(
                       '+12 points this week',
                       style: TextStyle(
                         fontSize: 12,
@@ -234,10 +234,10 @@ class _WellnessAnalyticsScreenState extends State<WellnessAnalyticsScreen> with 
             physics: const NeverScrollableScrollPhysics(),
             childAspectRatio: 1.2,
             children: [
-              _buildMetricCard('Daily Check-ins', '12/14', 'this week', Color(0xFF10B981), Icons.check_circle),
-              _buildMetricCard('Avg Mood', '7.8/10', 'feeling good', Color(0xFF8B5CF6), Icons.sentiment_satisfied),
-              _buildMetricCard('Hydration', '1.8L', 'daily average', Color(0xFF0EA5E9), Icons.water_drop),
-              _buildMetricCard('Sleep Quality', '8.2/10', 'excellent', Color(0xFF6366F1), Icons.bedtime),
+              _buildMetricCard('Daily Check-ins', '12/14', 'this week', const Color(0xFF10B981), Icons.check_circle),
+              _buildMetricCard('Avg Mood', '7.8/10', 'feeling good', const Color(0xFF8B5CF6), Icons.sentiment_satisfied),
+              _buildMetricCard('Hydration', '1.8L', 'daily average', const Color(0xFF0EA5E9), Icons.water_drop),
+              _buildMetricCard('Sleep Quality', '8.2/10', 'excellent', const Color(0xFF6366F1), Icons.bedtime),
             ],
           ),
 
@@ -270,10 +270,10 @@ class _WellnessAnalyticsScreenState extends State<WellnessAnalyticsScreen> with 
             ),
             child: Column(
               children: [
-                _buildSummaryItem('Most Productive Day', 'Wednesday', '9 check-ins completed', Color(0xFF10B981)),
-                _buildSummaryItem('Mood Highlight', 'Thursday', 'Highest energy levels recorded', Color(0xFF8B5CF6)),
-                _buildSummaryItem('Hydration Champion', 'Monday', '2.5L water intake - personal best!', Color(0xFF0EA5E9)),
-                _buildSummaryItem('Sleep Consistency', 'Weekend', 'Maintained 7+ hours both nights', Color(0xFF6366F1)),
+                _buildSummaryItem('Most Productive Day', 'Wednesday', '9 check-ins completed', const Color(0xFF10B981)),
+                _buildSummaryItem('Mood Highlight', 'Thursday', 'Highest energy levels recorded', const Color(0xFF8B5CF6)),
+                _buildSummaryItem('Hydration Champion', 'Monday', '2.5L water intake - personal best!', const Color(0xFF0EA5E9)),
+                _buildSummaryItem('Sleep Consistency', 'Weekend', 'Maintained 7+ hours both nights', const Color(0xFF6366F1)),
               ],
             ),
           ),
@@ -314,10 +314,10 @@ class _WellnessAnalyticsScreenState extends State<WellnessAnalyticsScreen> with 
                   ),
                 ),
                 const SizedBox(height: 16),
-                _buildMoodDistributionItem('😊 Happy', 45, Color(0xFF10B981)),
-                _buildMoodDistributionItem('😌 Calm', 30, Color(0xFF6366F1)),
-                _buildMoodDistributionItem('😴 Tired', 15, Color(0xFF8B5CF6)),
-                _buildMoodDistributionItem('😟 Anxious', 10, Color(0xFFEAB308)),
+                _buildMoodDistributionItem('😊 Happy', 45, const Color(0xFF10B981)),
+                _buildMoodDistributionItem('😌 Calm', 30, const Color(0xFF6366F1)),
+                _buildMoodDistributionItem('😴 Tired', 15, const Color(0xFF8B5CF6)),
+                _buildMoodDistributionItem('😟 Anxious', 10, const Color(0xFFEAB308)),
               ],
             ),
           ),
@@ -434,10 +434,10 @@ class _WellnessAnalyticsScreenState extends State<WellnessAnalyticsScreen> with 
                   ),
                 ),
                 const SizedBox(height: 16),
-                _buildHabitProgressItem('Morning Check-in', 85, Color(0xFF10B981)),
-                _buildHabitProgressItem('Hydration Goals', 92, Color(0xFF0EA5E9)),
-                _buildHabitProgressItem('Evening Reflection', 78, Color(0xFF8B5CF6)),
-                _buildHabitProgressItem('Mindful Moments', 65, Color(0xFFEAB308)),
+                _buildHabitProgressItem('Morning Check-in', 85, const Color(0xFF10B981)),
+                _buildHabitProgressItem('Hydration Goals', 92, const Color(0xFF0EA5E9)),
+                _buildHabitProgressItem('Evening Reflection', 78, const Color(0xFF8B5CF6)),
+                _buildHabitProgressItem('Mindful Moments', 65, const Color(0xFFEAB308)),
               ],
             ),
           ),
@@ -475,10 +475,10 @@ class _WellnessAnalyticsScreenState extends State<WellnessAnalyticsScreen> with 
                 Row(
                   children: [
                     Expanded(
-                      child: _buildStreakStat('Current Streak', '7 days', Color(0xFFEAB308)),
+                      child: _buildStreakStat('Current Streak', '7 days', const Color(0xFFEAB308)),
                     ),
                     Expanded(
-                      child: _buildStreakStat('Longest Streak', '21 days', Color(0xFF10B981)),
+                      child: _buildStreakStat('Longest Streak', '21 days', const Color(0xFF10B981)),
                     ),
                   ],
                 ),
@@ -486,10 +486,10 @@ class _WellnessAnalyticsScreenState extends State<WellnessAnalyticsScreen> with 
                 Row(
                   children: [
                     Expanded(
-                      child: _buildStreakStat('This Month', '18 days', Color(0xFF8B5CF6)),
+                      child: _buildStreakStat('This Month', '18 days', const Color(0xFF8B5CF6)),
                     ),
                     Expanded(
-                      child: _buildStreakStat('Success Rate', '78%', Color(0xFF0EA5E9)),
+                      child: _buildStreakStat('Success Rate', '78%', const Color(0xFF0EA5E9)),
                     ),
                   ],
                 ),
@@ -571,10 +571,10 @@ class _WellnessAnalyticsScreenState extends State<WellnessAnalyticsScreen> with 
                   ),
                 ),
                 const SizedBox(height: 16),
-                _buildTrendItem('Overall Wellness', '+15%', 'Steady improvement over 30 days', Color(0xFF10B981), true),
-                _buildTrendItem('Mood Stability', '+22%', 'Less fluctuation, more consistency', Color(0xFF8B5CF6), true),
-                _buildTrendItem('Sleep Quality', '+8%', 'Better bedtime routine impact', Color(0xFF6366F1), true),
-                _buildTrendItem('Stress Levels', '-18%', 'Effective stress management', Color(0xFF0EA5E9), true),
+                _buildTrendItem('Overall Wellness', '+15%', 'Steady improvement over 30 days', const Color(0xFF10B981), true),
+                _buildTrendItem('Mood Stability', '+22%', 'Less fluctuation, more consistency', const Color(0xFF8B5CF6), true),
+                _buildTrendItem('Sleep Quality', '+8%', 'Better bedtime routine impact', const Color(0xFF6366F1), true),
+                _buildTrendItem('Stress Levels', '-18%', 'Effective stress management', const Color(0xFF0EA5E9), true),
               ],
             ),
           ),
@@ -609,11 +609,11 @@ class _WellnessAnalyticsScreenState extends State<WellnessAnalyticsScreen> with 
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
+                const Row(
                   children: [
-                    const Icon(Icons.psychology, color: Color(0xFF3B82F6), size: 24),
-                    const SizedBox(width: 12),
-                    const Text(
+                    Icon(Icons.psychology, color: Color(0xFF3B82F6), size: 24),
+                    SizedBox(width: 12),
+                    Text(
                       'AI Predictions',
                       style: TextStyle(
                         fontSize: 18,
@@ -662,10 +662,10 @@ class _WellnessAnalyticsScreenState extends State<WellnessAnalyticsScreen> with 
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildRecommendationItem('🌅', 'Morning Routine', 'Add 5-minute meditation to boost daily mood score by 12%', Color(0xFF10B981)),
-                _buildRecommendationItem('🍎', 'Nutrition', 'Increase protein intake to sustain afternoon energy levels', Color(0xFFEAB308)),
-                _buildRecommendationItem('💤', 'Sleep', 'Consistent 10:30 PM bedtime could improve wellness score by 8%', Color(0xFF8B5CF6)),
-                _buildRecommendationItem('🏃‍♀️', 'Activity', 'Light exercise on Mondays helps improve weekly mood trend', Color(0xFF0EA5E9)),
+                _buildRecommendationItem('🌅', 'Morning Routine', 'Add 5-minute meditation to boost daily mood score by 12%', const Color(0xFF10B981)),
+                _buildRecommendationItem('🍎', 'Nutrition', 'Increase protein intake to sustain afternoon energy levels', const Color(0xFFEAB308)),
+                _buildRecommendationItem('💤', 'Sleep', 'Consistent 10:30 PM bedtime could improve wellness score by 8%', const Color(0xFF8B5CF6)),
+                _buildRecommendationItem('🏃‍♀️', 'Activity', 'Light exercise on Mondays helps improve weekly mood trend', const Color(0xFF0EA5E9)),
               ],
             ),
           ),

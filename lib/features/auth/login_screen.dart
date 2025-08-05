@@ -1,10 +1,8 @@
 // lib/features/auth/screens/login_screen.dart
 import 'package:flutter/material.dart';
-// import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-// import 'package:firebase_auth/firebase_auth.dart';
-// import 'package:google_sign_in/google_sign_in.dart';
-import 'package:pulsebreak_plus/features/auth/signup_screen.dart';
-import 'package:pulsebreak_plus/features/dashboard/main_navigation.dart';
+import '../../services/auth_service.dart';
+import 'signup_screen.dart';
+import '../dashboard/main_navigation.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -19,27 +17,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _isPasswordVisible = false;
   bool _isLoading = false;
-
-  // Firebase instances (lazy initialization) - commented out for now
-  // FirebaseAuth? _auth;
-  // GoogleSignIn? _googleSignIn;
-
-  @override
-  void initState() {
-    super.initState();
-    _initializeFirebase();
-  }
-
-  void _initializeFirebase() {
-    // Firebase initialization commented out for now
-    // try {
-    //   _auth = FirebaseAuth.instance;
-    //   _googleSignIn = GoogleSignIn();
-    // } catch (e) {
-    //   // Firebase not initialized - continuing in demo mode
-    //   // Firebase instances will remain null
-    // }
-  }
 
   @override
   void dispose() {
@@ -61,21 +38,22 @@ class _LoginScreenState extends State<LoginScreen> {
       });
 
       try {
-        // Demo mode - just delay and navigate
-        await Future<void>.delayed(const Duration(seconds: 1));
+        final result = await AuthService.instance.signInWithEmail(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+        );
         
-        if (mounted) {
+        if (result != null && mounted) {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute<void>(builder: (context) => const MainNavigation()),
           );
         }
       } catch (e) {
-        // Handle login errors
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Login failed: ${e.toString()}'),
+              content: Text(e.toString()),
               backgroundColor: const Color(0xFFEF4444),
             ),
           );
@@ -96,10 +74,9 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      // Demo mode - just delay and navigate
-      await Future<void>.delayed(const Duration(seconds: 1));
+      final result = await AuthService.instance.signInWithGoogle();
       
-      if (mounted) {
+      if (result != null && mounted) {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute<void>(builder: (context) => const MainNavigation()),
@@ -109,7 +86,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Google Sign In failed: ${e.toString()}'),
+            content: Text(e.toString()),
             backgroundColor: const Color(0xFFEF4444),
           ),
         );
@@ -124,33 +101,100 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _facebookSignIn() async {
-    // Implement Facebook Sign In when ready
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Facebook Sign In - Coming Soon!'),
-        backgroundColor: Color(0xFF1877F2),
-      ),
-    );
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final result = await AuthService.instance.signInWithFacebook();
+      
+      if (result != null && mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute<void>(builder: (context) => const MainNavigation()),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: const Color(0xFFEF4444),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   Future<void> _appleSignIn() async {
-    // Implement Apple Sign In when ready
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Apple Sign In - Coming Soon!'),
-        backgroundColor: Color(0xFF000000),
-      ),
-    );
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final result = await AuthService.instance.signInWithApple();
+      
+      if (result != null && mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute<void>(builder: (context) => const MainNavigation()),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: const Color(0xFFEF4444),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
-  void _forgotPassword() {
-    // Navigate to forgot password screen
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Forgot password clicked'),
-        backgroundColor: Color(0xFF4F8A8B),
-      ),
-    );
+  Future<void> _forgotPassword() async {
+    if (_emailController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter your email address first'),
+          backgroundColor: Color(0xFFEF4444),
+        ),
+      );
+      return;
+    }
+
+    try {
+      await AuthService.instance.sendPasswordResetEmail(_emailController.text.trim());
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Password reset email sent! Check your inbox.'),
+            backgroundColor: Color(0xFF188038),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: const Color(0xFFEF4444),
+          ),
+        );
+      }
+    }
   }
 
   void _signUp() {
@@ -292,7 +336,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           borderRadius: BorderRadius.circular(16),
                           borderSide: const BorderSide(
                             color: Color(0xFFE5E7EB),
-                            width: 1,
                           ),
                         ),
                         focusedBorder: OutlineInputBorder(
@@ -379,7 +422,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           borderRadius: BorderRadius.circular(16),
                           borderSide: const BorderSide(
                             color: Color(0xFFE5E7EB),
-                            width: 1,
                           ),
                         ),
                         focusedBorder: OutlineInputBorder(
@@ -594,7 +636,7 @@ class _LoginScreenState extends State<LoginScreen> {
         onPressed: _isLoading ? null : onPressed,
         style: OutlinedButton.styleFrom(
           backgroundColor: Colors.white,
-          side: const BorderSide(color: Color(0xFFE5E7EB), width: 1),
+          side: const BorderSide(color: Color(0xFFE5E7EB)),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),

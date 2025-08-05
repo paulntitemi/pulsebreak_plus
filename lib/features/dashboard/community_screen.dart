@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../services/messaging_service.dart';
+import '../messaging/chat_screen.dart';
+import '../messaging/chat_list_screen.dart';
 
 class CommunityUser {
   final String id;
@@ -95,27 +98,29 @@ class CommunityScreen extends StatefulWidget {
   State<CommunityScreen> createState() => _CommunityScreenState();
 }
 
-class _CommunityScreenState extends State<CommunityScreen> with TickerProviderStateMixin {
+class _CommunityScreenState extends State<CommunityScreen>
+    with TickerProviderStateMixin {
   late TabController _tabController;
-  
+
   // Track which posts are liked by current user
   final Set<String> _likedPosts = <String>{};
-  
+
   // Track double-tap like animations
   final Map<String, bool> _showLikeAnimation = <String, bool>{};
-  
+
   // Track custom emoji for mood selection (replaces the 8th emoji)
   String _customMoodEmoji = '🤔';
-  
+
   // Track friend requests
   final Set<String> _sentRequests = <String>{};
-  
+
   final List<PotentialFriend> _potentialFriends = [
     PotentialFriend(
       id: 'pf1',
       name: 'Emma Wilson',
       avatar: '👩‍🎓',
-      bio: 'Mindfulness advocate and yoga instructor. Spreading positive vibes!',
+      bio:
+          'Mindfulness advocate and yoga instructor. Spreading positive vibes!',
       mutualFriends: 3,
       commonInterests: ['Meditation', 'Yoga', 'Journaling'],
       isRequested: false,
@@ -124,7 +129,8 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
       id: 'pf2',
       name: 'David Chen',
       avatar: '👨‍💼',
-      bio: 'Software engineer finding balance in tech life. Love hiking and reading.',
+      bio:
+          'Software engineer finding balance in tech life. Love hiking and reading.',
       mutualFriends: 1,
       commonInterests: ['Reading', 'Technology', 'Hiking'],
       isRequested: false,
@@ -166,14 +172,15 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
       isRequested: false,
     ),
   ];
-  
+
   final List<FriendRequest> _friendRequests = [
     FriendRequest(
       id: 'fr1',
       userId: 'user1',
       userName: 'Oliver Smith',
       userAvatar: '👨‍💻',
-      message: 'Hi! I saw your wellness journey posts and would love to connect!',
+      message:
+          'Hi! I saw your wellness journey posts and would love to connect!',
       timestamp: DateTime.now().subtract(const Duration(hours: 2)),
       isIncoming: true,
     ),
@@ -182,12 +189,13 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
       userId: 'user2',
       userName: 'Zoe Adams',
       userAvatar: '👩‍🔬',
-      message: 'Your mindfulness tips have been so helpful. Let\'s be wellness buddies!',
+      message:
+          'Your mindfulness tips have been so helpful. Let\'s be wellness buddies!',
       timestamp: DateTime.now().subtract(const Duration(days: 1)),
       isIncoming: true,
     ),
   ];
-  
+
   final List<CommunityUser> _friends = [
     CommunityUser(
       id: '1',
@@ -237,7 +245,8 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
       userId: '1',
       userName: 'Sarah Chen',
       userAvatar: '👩‍💼',
-      content: 'Just completed my morning meditation! Feeling so centered and ready for the day ahead. 🧘‍♀️',
+      content:
+          'Just completed my morning meditation! Feeling so centered and ready for the day ahead. 🧘‍♀️',
       mood: '😊',
       timestamp: DateTime.now().subtract(const Duration(hours: 2)),
       likes: 8,
@@ -249,7 +258,8 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
       userId: '3',
       userName: 'Maya Patel',
       userAvatar: '👩‍🎨',
-      content: 'Hit my 20-day wellness streak today! Small daily habits really do add up. Keep going everyone! 💪',
+      content:
+          'Hit my 20-day wellness streak today! Small daily habits really do add up. Keep going everyone! 💪',
       mood: '💪',
       timestamp: DateTime.now().subtract(const Duration(hours: 5)),
       likes: 15,
@@ -261,7 +271,8 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
       userId: '4',
       userName: 'Chris Johnson',
       userAvatar: '👨‍🏫',
-      content: 'Grateful for this beautiful sunrise and my morning coffee. Sometimes it\'s the simple moments that matter most ☕',
+      content:
+          'Grateful for this beautiful sunrise and my morning coffee. Sometimes it\'s the simple moments that matter most ☕',
       mood: '😌',
       timestamp: DateTime.now().subtract(const Duration(hours: 8)),
       likes: 6,
@@ -274,8 +285,17 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
     final TextEditingController postController = TextEditingController();
     String selectedMood = '😊';
     String selectedAchievement = '';
-    
-    final List<String> moodOptions = ['😊', '😌', '💪', '🧘', '🎉', '😔', '😰', _customMoodEmoji];
+
+    final List<String> moodOptions = [
+      '😊',
+      '😌',
+      '💪',
+      '🧘',
+      '🎉',
+      '😔',
+      '😰',
+      _customMoodEmoji,
+    ];
     final List<String> achievementOptions = [
       '',
       '7-day streak',
@@ -292,227 +312,280 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setModalState) => Container(
-          height: MediaQuery.of(context).size.height * 0.8,
-          margin: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Column(
-            children: [
-              // Handle bar
-              Container(
-                margin: const EdgeInsets.only(top: 12),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE5E7EB),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              
-              // Header
-              Padding(
-                padding: const EdgeInsets.all(20),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Share with Community',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF2E3A59),
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        if (postController.text.trim().isNotEmpty) {
-                          _addNewPost(postController.text.trim(), selectedMood, selectedAchievement);
-                          Navigator.pop(context);
-                        }
-                      },
-                      child: const Text(
-                        'Post',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF8B5CF6),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
+      builder:
+          (context) => StatefulBuilder(
+            builder:
+                (context, setModalState) => Container(
+                  height: MediaQuery.of(context).size.height * 0.8,
+                  margin: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Post content input
+                      // Handle bar
                       Container(
-                        padding: const EdgeInsets.all(16),
+                        margin: const EdgeInsets.only(top: 12),
+                        width: 40,
+                        height: 4,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF9FAFB),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xFFE5E7EB)),
-                        ),
-                        child: TextField(
-                          controller: postController,
-                          maxLines: 4,
-                          maxLength: 280,
-                          decoration: const InputDecoration(
-                            hintText: 'How are you feeling today? Share your wellness journey...',
-                            border: InputBorder.none,
-                            hintStyle: TextStyle(color: Color(0xFF9CA3AF)),
-                          ),
-                          style: const TextStyle(
-                            fontSize: 16,
-                            color: Color(0xFF2E3A59),
-                          ),
+                          color: const Color(0xFFE5E7EB),
+                          borderRadius: BorderRadius.circular(2),
                         ),
                       ),
-                      
-                      const SizedBox(height: 24),
-                      
-                      // Mood selection
-                      const Text(
-                        'Current Mood',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF2E3A59),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Wrap(
-                        spacing: 12,
-                        runSpacing: 8,
-                        children: [
-                          // Regular mood options
-                          ...moodOptions.map((mood) => GestureDetector(
-                            onTap: () => setModalState(() => selectedMood = mood),
-                            child: Container(
-                              width: 50,
-                              height: 50,
-                              decoration: BoxDecoration(
-                                color: selectedMood == mood 
-                                    ? const Color(0xFF8B5CF6).withValues(alpha: 0.1)
-                                    : const Color(0xFFF3F4F6),
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: selectedMood == mood 
-                                      ? const Color(0xFF8B5CF6)
-                                      : Colors.transparent,
-                                  width: 2,
-                                ),
-                              ),
-                              child: Center(
-                                child: Text(mood, style: const TextStyle(fontSize: 24)),
-                              ),
-                            ),
-                          )).toList(),
-                          // Plus button for custom emoji
-                          GestureDetector(
-                            onTap: () => _showEmojiPicker(context, setModalState),
-                            child: Container(
-                              width: 50,
-                              height: 50,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFF3F4F6),
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: const Color(0xFF8B5CF6).withValues(alpha: 0.3),
-                                  width: 2,
-                                  style: BorderStyle.solid,
-                                ),
-                              ),
-                              child: const Center(
-                                child: Icon(
-                                  Icons.add,
-                                  color: Color(0xFF8B5CF6),
-                                  size: 24,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      
-                      const SizedBox(height: 24),
-                      
-                      // Achievement selection
-                      const Text(
-                        'Share an Achievement (Optional)',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF2E3A59),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF9FAFB),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xFFE5E7EB)),
-                        ),
-                        child: DropdownButtonHideUnderline(
-                          child: Theme(
-                            data: Theme.of(context).copyWith(
-                              canvasColor: Colors.white,
-                              textTheme: const TextTheme(
-                                bodyMedium: TextStyle(
-                                  color: Color(0xFF2E3A59),
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ),
-                            child: DropdownButton<String>(
-                              value: selectedAchievement,
-                              isExpanded: true,
-                              hint: const Text(
-                                'Select an achievement',
-                                style: TextStyle(
-                                  color: Color(0xFF9CA3AF),
-                                  fontSize: 14,
-                                ),
-                              ),
-                              style: const TextStyle(
+
+                      // Header
+                      Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'Share with Community',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w700,
                                 color: Color(0xFF2E3A59),
-                                fontSize: 14,
                               ),
-                              dropdownColor: Colors.white,
-                              items: achievementOptions.map((achievement) => DropdownMenuItem(
-                                value: achievement,
-                                child: Text(
-                                  achievement.isEmpty ? 'No achievement' : achievement,
-                                  style: const TextStyle(
-                                    color: Color(0xFF2E3A59),
-                                    fontSize: 14,
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                if (postController.text.trim().isNotEmpty) {
+                                  _addNewPost(
+                                    postController.text.trim(),
+                                    selectedMood,
+                                    selectedAchievement,
+                                  );
+                                  Navigator.pop(context);
+                                }
+                              },
+                              child: const Text(
+                                'Post',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF8B5CF6),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Post content input
+                              Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF9FAFB),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: const Color(0xFFE5E7EB),
                                   ),
                                 ),
-                              )).toList(),
-                              onChanged: (value) => setModalState(() => selectedAchievement = value ?? ''),
-                            ),
+                                child: TextField(
+                                  controller: postController,
+                                  maxLines: 4,
+                                  maxLength: 280,
+                                  decoration: const InputDecoration(
+                                    hintText:
+                                        'How are you feeling today? Share your wellness journey...',
+                                    border: InputBorder.none,
+                                    hintStyle: TextStyle(
+                                      color: Color(0xFF9CA3AF),
+                                    ),
+                                  ),
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    color: Color(0xFF2E3A59),
+                                  ),
+                                ),
+                              ),
+
+                              const SizedBox(height: 24),
+
+                              // Mood selection
+                              const Text(
+                                'Current Mood',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF2E3A59),
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Wrap(
+                                spacing: 12,
+                                runSpacing: 8,
+                                children: [
+                                  // Regular mood options
+                                  ...moodOptions
+                                      .map(
+                                        (mood) => GestureDetector(
+                                          onTap:
+                                              () => setModalState(
+                                                () => selectedMood = mood,
+                                              ),
+                                          child: Container(
+                                            width: 50,
+                                            height: 50,
+                                            decoration: BoxDecoration(
+                                              color:
+                                                  selectedMood == mood
+                                                      ? const Color(
+                                                        0xFF8B5CF6,
+                                                      ).withValues(alpha: 0.1)
+                                                      : const Color(0xFFF3F4F6),
+                                              shape: BoxShape.circle,
+                                              border: Border.all(
+                                                color:
+                                                    selectedMood == mood
+                                                        ? const Color(
+                                                          0xFF8B5CF6,
+                                                        )
+                                                        : Colors.transparent,
+                                                width: 2,
+                                              ),
+                                            ),
+                                            child: Center(
+                                              child: Text(
+                                                mood,
+                                                style: const TextStyle(
+                                                  fontSize: 24,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      )
+                                      .toList(),
+                                  // Plus button for custom emoji
+                                  GestureDetector(
+                                    onTap:
+                                        () => _showEmojiPicker(
+                                          context,
+                                          setModalState,
+                                        ),
+                                    child: Container(
+                                      width: 50,
+                                      height: 50,
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFF3F4F6),
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: const Color(
+                                            0xFF8B5CF6,
+                                          ).withValues(alpha: 0.3),
+                                          width: 2,
+                                        ),
+                                      ),
+                                      child: const Center(
+                                        child: Icon(
+                                          Icons.add,
+                                          color: Color(0xFF8B5CF6),
+                                          size: 24,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+
+                              const SizedBox(height: 24),
+
+                              // Achievement selection
+                              const Text(
+                                'Share an Achievement (Optional)',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF2E3A59),
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF9FAFB),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: const Color(0xFFE5E7EB),
+                                  ),
+                                ),
+                                child: DropdownButtonHideUnderline(
+                                  child: Theme(
+                                    data: Theme.of(context).copyWith(
+                                      canvasColor: Colors.white,
+                                      textTheme: const TextTheme(
+                                        bodyMedium: TextStyle(
+                                          color: Color(0xFF2E3A59),
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ),
+                                    child: DropdownButton<String>(
+                                      value: selectedAchievement,
+                                      isExpanded: true,
+                                      hint: const Text(
+                                        'Select an achievement',
+                                        style: TextStyle(
+                                          color: Color(0xFF9CA3AF),
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                      style: const TextStyle(
+                                        color: Color(0xFF2E3A59),
+                                        fontSize: 14,
+                                      ),
+                                      dropdownColor: Colors.white,
+                                      items:
+                                          achievementOptions
+                                              .map(
+                                                (achievement) =>
+                                                    DropdownMenuItem(
+                                                      value: achievement,
+                                                      child: Text(
+                                                        achievement.isEmpty
+                                                            ? 'No achievement'
+                                                            : achievement,
+                                                        style: const TextStyle(
+                                                          color: Color(
+                                                            0xFF2E3A59,
+                                                          ),
+                                                          fontSize: 14,
+                                                        ),
+                                                      ),
+                                                    ),
+                                              )
+                                              .toList(),
+                                      onChanged:
+                                          (value) => setModalState(
+                                            () =>
+                                                selectedAchievement =
+                                                    value ?? '',
+                                          ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
+
+                      const SizedBox(height: 20),
                     ],
                   ),
                 ),
-              ),
-              
-              const SizedBox(height: 20),
-            ],
           ),
-        ),
-      ),
     );
   }
 
@@ -529,11 +602,11 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
       comments: [],
       achievement: achievement,
     );
-    
+
     setState(() {
       _recentPosts.insert(0, newPost); // Add to beginning of list
     });
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Posted to community feed!'),
@@ -547,7 +620,7 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
       final postIndex = _recentPosts.indexWhere((post) => post.id == postId);
       if (postIndex != -1) {
         final post = _recentPosts[postIndex];
-        
+
         if (_likedPosts.contains(postId)) {
           // Unlike the post
           _likedPosts.remove(postId);
@@ -585,211 +658,247 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
 
   void _showCommentsModal(CommunityPost post) {
     final TextEditingController commentController = TextEditingController();
-    
+
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setModalState) => Container(
-          height: MediaQuery.of(context).size.height * 0.7,
-          margin: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Column(
-            children: [
-              // Handle bar
-              Container(
-                margin: const EdgeInsets.only(top: 12),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE5E7EB),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              
-              // Header
-              Padding(
-                padding: const EdgeInsets.all(20),
-                child: Row(
-                  children: [
-                    GestureDetector(
-                      onTap: () => _showMainProfileExpansion(post.userAvatar, post.userName),
-                      child: Hero(
-                        tag: 'post_profile_${post.id}',
-                        child: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF8B5CF6).withValues(alpha: 0.1),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Center(
-                            child: Text(
-                              post.userAvatar,
-                              style: const TextStyle(fontSize: 18),
-                            ),
-                          ),
+      builder:
+          (context) => StatefulBuilder(
+            builder:
+                (context, setModalState) => Container(
+                  height: MediaQuery.of(context).size.height * 0.7,
+                  margin: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Column(
+                    children: [
+                      // Handle bar
+                      Container(
+                        margin: const EdgeInsets.only(top: 12),
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE5E7EB),
+                          borderRadius: BorderRadius.circular(2),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '${post.userName}\'s Post',
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF2E3A59),
-                            ),
-                          ),
-                          Text(
-                            '${post.comments.length} comments',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Color(0xFF6B7280),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              
-              // Comments List
-              Expanded(
-                child: post.comments.isEmpty
-                    ? const Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
+
+                      // Header
+                      Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Row(
                           children: [
-                            Icon(
-                              Icons.chat_bubble_outline,
-                              size: 60,
-                              color: Color(0xFFE5E7EB),
-                            ),
-                            SizedBox(height: 16),
-                            Text(
-                              'No comments yet',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Color(0xFF6B7280),
+                            GestureDetector(
+                              onTap:
+                                  () => _showMainProfileExpansion(
+                                    post.userAvatar,
+                                    post.userName,
+                                  ),
+                              child: Hero(
+                                tag: 'post_profile_${post.id}',
+                                child: Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    color: const Color(
+                                      0xFF8B5CF6,
+                                    ).withValues(alpha: 0.1),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      post.userAvatar,
+                                      style: const TextStyle(fontSize: 18),
+                                    ),
+                                  ),
+                                ),
                               ),
                             ),
-                            SizedBox(height: 8),
-                            Text(
-                              'Be the first to comment!',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Color(0xFF9CA3AF),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '${post.userName}\'s Post',
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w700,
+                                      color: Color(0xFF2E3A59),
+                                    ),
+                                  ),
+                                  Text(
+                                    '${post.comments.length} comments',
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: Color(0xFF6B7280),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
                         ),
-                      )
-                    : ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        itemCount: post.comments.length,
-                        itemBuilder: (context, index) => _buildCommentItem(post.comments[index], index),
                       ),
-              ),
-              
-              // Add Comment Input
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: const BoxDecoration(
-                  border: Border(
-                    top: BorderSide(color: Color(0xFFE5E7EB), width: 1),
+
+                      // Comments List
+                      Expanded(
+                        child:
+                            post.comments.isEmpty
+                                ? const Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.chat_bubble_outline,
+                                        size: 60,
+                                        color: Color(0xFFE5E7EB),
+                                      ),
+                                      SizedBox(height: 16),
+                                      Text(
+                                        'No comments yet',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          color: Color(0xFF6B7280),
+                                        ),
+                                      ),
+                                      SizedBox(height: 8),
+                                      Text(
+                                        'Be the first to comment!',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: Color(0xFF9CA3AF),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                                : ListView.builder(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                  ),
+                                  itemCount: post.comments.length,
+                                  itemBuilder:
+                                      (context, index) => _buildCommentItem(
+                                        post.comments[index],
+                                        index,
+                                      ),
+                                ),
+                      ),
+
+                      // Add Comment Input
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: const BoxDecoration(
+                          border: Border(
+                            top: BorderSide(color: Color(0xFFE5E7EB)),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 36,
+                              height: 36,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF4F8A8B),
+                                borderRadius: BorderRadius.circular(18),
+                              ),
+                              child: const Icon(
+                                Icons.person,
+                                color: Colors.white,
+                                size: 18,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF9FAFB),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: const Color(0xFFE5E7EB),
+                                  ),
+                                ),
+                                child: TextField(
+                                  controller: commentController,
+                                  style: const TextStyle(
+                                    color: Color(0xFF2E3A59),
+                                    fontSize: 14,
+                                  ),
+                                  decoration: const InputDecoration(
+                                    hintText: 'Add a comment...',
+                                    hintStyle: TextStyle(
+                                      color: Color(0xFF9CA3AF),
+                                      fontSize: 14,
+                                    ),
+                                    border: InputBorder.none,
+                                    contentPadding: EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 10,
+                                    ),
+                                  ),
+                                  onSubmitted: (comment) {
+                                    if (comment.trim().isNotEmpty) {
+                                      _addComment(post.id, comment.trim());
+                                      commentController.clear();
+                                      setModalState(() {}); // Refresh the modal
+                                    }
+                                  },
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            GestureDetector(
+                              onTap: () {
+                                if (commentController.text.trim().isNotEmpty) {
+                                  _addComment(
+                                    post.id,
+                                    commentController.text.trim(),
+                                  );
+                                  commentController.clear();
+                                  setModalState(() {}); // Refresh the modal
+                                }
+                              },
+                              child: Container(
+                                width: 36,
+                                height: 36,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF8B5CF6),
+                                  borderRadius: BorderRadius.circular(18),
+                                ),
+                                child: const Icon(
+                                  Icons.send,
+                                  color: Colors.white,
+                                  size: 16,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF4F8A8B),
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-                      child: const Icon(Icons.person, color: Colors.white, size: 18),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF9FAFB),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: const Color(0xFFE5E7EB)),
-                        ),
-                        child: TextField(
-                          controller: commentController,
-                          style: const TextStyle(
-                            color: Color(0xFF2E3A59),
-                            fontSize: 14,
-                          ),
-                          decoration: const InputDecoration(
-                            hintText: 'Add a comment...',
-                            hintStyle: TextStyle(
-                              color: Color(0xFF9CA3AF),
-                              fontSize: 14,
-                            ),
-                            border: InputBorder.none,
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 10,
-                            ),
-                          ),
-                          onSubmitted: (comment) {
-                            if (comment.trim().isNotEmpty) {
-                              _addComment(post.id, comment.trim());
-                              commentController.clear();
-                              setModalState(() {}); // Refresh the modal
-                            }
-                          },
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    GestureDetector(
-                      onTap: () {
-                        if (commentController.text.trim().isNotEmpty) {
-                          _addComment(post.id, commentController.text.trim());
-                          commentController.clear();
-                          setModalState(() {}); // Refresh the modal
-                        }
-                      },
-                      child: Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF8B5CF6),
-                          borderRadius: BorderRadius.circular(18),
-                        ),
-                        child: const Icon(Icons.send, color: Colors.white, size: 16),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
           ),
-        ),
-      ),
     );
   }
 
   Widget _buildCommentItem(String comment, int index) {
     // Generate different avatars for variety
-    final List<String> avatars = ['👤', '👨‍💼', '👩‍💻', '👨‍🎓', '👩‍🎨', '👨‍⚕️', '👩‍🏫'];
+    final List<String> avatars = [
+      '👤',
+      '👨‍💼',
+      '👩‍💻',
+      '👨‍🎓',
+      '👩‍🎨',
+      '👨‍⚕️',
+      '👩‍🏫',
+    ];
     final avatar = avatars[index % avatars.length];
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       child: Row(
@@ -813,17 +922,14 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
               decoration: BoxDecoration(
                 color: const Color(0xFFF3F4F6),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: const Color(0xFFE5E7EB),
-                  width: 1,
-                ),
+                border: Border.all(color: const Color(0xFFE5E7EB), width: 1),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  const Text(
                     'Community Member',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                       color: Color(0xFF8B5CF6),
@@ -853,7 +959,7 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
       if (postIndex != -1) {
         final post = _recentPosts[postIndex];
         final updatedComments = List<String>.from(post.comments)..add(comment);
-        
+
         _recentPosts[postIndex] = CommunityPost(
           id: post.id,
           userId: post.userId,
@@ -875,14 +981,14 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
     if (!_likedPosts.contains(postId)) {
       _toggleLike(postId);
     }
-    
+
     // Show heart scale animation
     setState(() {
       _showLikeAnimation[postId] = true;
     });
-    
+
     // Hide animation after 300ms
-    Future.delayed(const Duration(milliseconds: 300), () {
+    Future<void>.delayed(const Duration(milliseconds: 300), () {
       if (mounted) {
         setState(() {
           _showLikeAnimation[postId] = false;
@@ -893,110 +999,266 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
 
   void _showEmojiPicker(BuildContext context, StateSetter setModalState) {
     final List<String> popularEmojis = [
-      '😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣',
-      '😊', '😇', '🙂', '🙃', '😉', '😌', '😍', '🥰',
-      '😘', '😗', '😙', '😚', '😋', '😛', '😝', '😜',
-      '🤪', '🤨', '🧐', '🤓', '😎', '🤩', '🥳', '😏',
-      '😒', '😞', '😔', '😟', '😕', '🙁', '☹️', '😣',
-      '😖', '😫', '😩', '🥺', '😢', '😭', '😤', '😠',
-      '😡', '🤬', '🤯', '😳', '🥵', '🥶', '😱', '😨',
-      '😰', '😥', '😓', '🤗', '🤔', '🤭', '🤫', '🤥',
-      '😶', '😐', '😑', '😬', '🙄', '😯', '😦', '😧',
-      '😮', '😲', '🥱', '😴', '🤤', '😪', '😵', '🤐',
-      '🥴', '🤢', '🤮', '🤧', '😷', '🤒', '🤕', '🤑',
-      '🤠', '😈', '👿', '👹', '👺', '🤡', '💩', '👻',
-      '💀', '☠️', '👽', '👾', '🤖', '🎃', '😺', '😸',
-      '😹', '😻', '😼', '😽', '🙀', '😿', '😾', '💪',
-      '🦾', '🦿', '🦵', '🦶', '👂', '🦻', '👃', '🧠',
-      '🫀', '🫁', '🦷', '🦴', '👀', '👁️', '👅', '👄'
+      '😀',
+      '😃',
+      '😄',
+      '😁',
+      '😆',
+      '😅',
+      '😂',
+      '🤣',
+      '😊',
+      '😇',
+      '🙂',
+      '🙃',
+      '😉',
+      '😌',
+      '😍',
+      '🥰',
+      '😘',
+      '😗',
+      '😙',
+      '😚',
+      '😋',
+      '😛',
+      '😝',
+      '😜',
+      '🤪',
+      '🤨',
+      '🧐',
+      '🤓',
+      '😎',
+      '🤩',
+      '🥳',
+      '😏',
+      '😒',
+      '😞',
+      '😔',
+      '😟',
+      '😕',
+      '🙁',
+      '☹️',
+      '😣',
+      '😖',
+      '😫',
+      '😩',
+      '🥺',
+      '😢',
+      '😭',
+      '😤',
+      '😠',
+      '😡',
+      '🤬',
+      '🤯',
+      '😳',
+      '🥵',
+      '🥶',
+      '😱',
+      '😨',
+      '😰',
+      '😥',
+      '😓',
+      '🤗',
+      '🤔',
+      '🤭',
+      '🤫',
+      '🤥',
+      '😶',
+      '😐',
+      '😑',
+      '😬',
+      '🙄',
+      '😯',
+      '😦',
+      '😧',
+      '😮',
+      '😲',
+      '🥱',
+      '😴',
+      '🤤',
+      '😪',
+      '😵',
+      '🤐',
+      '🥴',
+      '🤢',
+      '🤮',
+      '🤧',
+      '😷',
+      '🤒',
+      '🤕',
+      '🤑',
+      '🤠',
+      '😈',
+      '👿',
+      '👹',
+      '👺',
+      '🤡',
+      '💩',
+      '👻',
+      '💀',
+      '☠️',
+      '👽',
+      '👾',
+      '🤖',
+      '🎃',
+      '😺',
+      '😸',
+      '😹',
+      '😻',
+      '😼',
+      '😽',
+      '🙀',
+      '😿',
+      '😾',
+      '💪',
+      '🦾',
+      '🦿',
+      '🦵',
+      '🦶',
+      '👂',
+      '🦻',
+      '👃',
+      '🧠',
+      '🫀',
+      '🫁',
+      '🦷',
+      '🦴',
+      '👀',
+      '👁️',
+      '👅',
+      '👄',
     ];
 
-    showDialog(
+    showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text(
-          'Choose Custom Emoji',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF2E3A59),
-          ),
-        ),
-        content: SizedBox(
-          width: double.maxFinite,
-          height: 300,
-          child: GridView.builder(
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 8,
-              childAspectRatio: 1,
-              crossAxisSpacing: 8,
-              mainAxisSpacing: 8,
+      builder:
+          (context) => AlertDialog(
+            title: const Text(
+              'Choose Custom Emoji',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF2E3A59),
+              ),
             ),
-            itemCount: popularEmojis.length,
-            itemBuilder: (context, index) {
-              final emoji = popularEmojis[index];
-              return GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _customMoodEmoji = emoji;
-                  });
-                  Navigator.pop(context);
-                  setModalState(() {}); // Refresh the post creation modal
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Custom emoji $emoji saved!'),
-                      backgroundColor: const Color(0xFF10B981),
-                      duration: const Duration(seconds: 2),
+            content: SizedBox(
+              width: double.maxFinite,
+              height: 300,
+              child: GridView.builder(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 8,
+                  childAspectRatio: 1,
+                  crossAxisSpacing: 8,
+                  mainAxisSpacing: 8,
+                ),
+                itemCount: popularEmojis.length,
+                itemBuilder: (context, index) {
+                  final emoji = popularEmojis[index];
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _customMoodEmoji = emoji;
+                      });
+                      Navigator.pop(context);
+                      setModalState(() {}); // Refresh the post creation modal
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Custom emoji $emoji saved!'),
+                          backgroundColor: const Color(0xFF10B981),
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF9FAFB),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: const Color(0xFFE5E7EB),
+                          width: 1,
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          emoji,
+                          style: const TextStyle(fontSize: 20),
+                        ),
+                      ),
                     ),
                   );
                 },
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF9FAFB),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: const Color(0xFFE5E7EB),
-                      width: 1,
-                    ),
-                  ),
-                  child: Center(
-                    child: Text(
-                      emoji,
-                      style: const TextStyle(fontSize: 20),
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'Cancel',
-              style: TextStyle(color: Color(0xFF6B7280)),
+              ),
             ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text(
+                  'Cancel',
+                  style: TextStyle(color: Color(0xFF6B7280)),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
   void _showAddFriendsScreen() {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => _AddFriendsScreen(
-          potentialFriends: _potentialFriends,
-          friendRequests: _friendRequests,
-          sentRequests: _sentRequests,
-          onSendRequest: _sendFriendRequest,
-          onAcceptRequest: _acceptFriendRequest,
-          onDeclineRequest: _declineFriendRequest,
-        ),
+      MaterialPageRoute<void>(
+        builder:
+            (context) => _AddFriendsScreen(
+              potentialFriends: _potentialFriends,
+              friendRequests: _friendRequests,
+              sentRequests: _sentRequests,
+              onSendRequest: _sendFriendRequest,
+              onAcceptRequest: _acceptFriendRequest,
+              onDeclineRequest: _declineFriendRequest,
+            ),
       ),
     );
+  }
+
+  void _openChatList() {
+    Navigator.push(
+      context,
+      MaterialPageRoute<void>(
+        builder: (context) => const ChatListScreen(),
+      ),
+    );
+  }
+
+  Future<void> _messageUser(CommunityUser user) async {
+    final messagingService = MessagingService.instance;
+    
+    try {
+      final chatId = await messagingService.createOrGetDirectChat(
+        user.id,
+        user.name,
+      );
+      
+      if (chatId != null && mounted) {
+        final chat = await messagingService.getChatById(chatId);
+        if (chat != null && mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute<void>(
+              builder: (context) => ChatScreen(chat: chat),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('Error starting chat with user: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Unable to start chat. Please try again.'),
+            backgroundColor: Color(0xFFEF4444),
+          ),
+        );
+      }
+    }
   }
 
   void _sendFriendRequest(String friendId) {
@@ -1016,7 +1278,7 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
         );
       }
     });
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Friend request sent!'),
@@ -1030,24 +1292,26 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
       final requestIndex = _friendRequests.indexWhere((r) => r.id == requestId);
       if (requestIndex != -1) {
         final request = _friendRequests[requestIndex];
-        
+
         // Add to friends list
-        _friends.add(CommunityUser(
-          id: request.userId,
-          name: request.userName,
-          avatar: request.userAvatar,
-          currentMood: '😊',
-          streakDays: 1,
-          lastActivity: 'Just now',
-          isOnline: true,
-          achievements: ['New friend'],
-        ));
-        
+        _friends.add(
+          CommunityUser(
+            id: request.userId,
+            name: request.userName,
+            avatar: request.userAvatar,
+            currentMood: '😊',
+            streakDays: 1,
+            lastActivity: 'Just now',
+            isOnline: true,
+            achievements: ['New friend'],
+          ),
+        );
+
         // Remove from requests
         _friendRequests.removeAt(requestIndex);
       }
     });
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Friend request accepted!'),
@@ -1060,7 +1324,7 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
     setState(() {
       _friendRequests.removeWhere((r) => r.id == requestId);
     });
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Friend request declined'),
@@ -1070,44 +1334,46 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
   }
 
   void _showMainProfileExpansion(String avatar, String name) {
-    showDialog(
+    showDialog<void>(
       context: context,
       barrierColor: Colors.black.withValues(alpha: 0.8),
-      builder: (context) => GestureDetector(
-        onTap: () => Navigator.pop(context),
-        child: Scaffold(
-          backgroundColor: Colors.transparent,
-          body: Center(
-            child: GestureDetector(
-              onTap: () {}, // Prevent dialog from closing when tapping the content
-              child: Hero(
-                tag: 'profile_expanded',
-                child: Container(
-                  width: 200,
-                  height: 200,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF8B5CF6).withValues(alpha: 0.15),
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.3),
-                        blurRadius: 20,
-                        offset: const Offset(0, 10),
+      builder:
+          (context) => GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: Scaffold(
+              backgroundColor: Colors.transparent,
+              body: Center(
+                child: GestureDetector(
+                  onTap:
+                      () {}, // Prevent dialog from closing when tapping the content
+                  child: Hero(
+                    tag: 'profile_expanded',
+                    child: Container(
+                      width: 200,
+                      height: 200,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF8B5CF6).withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.3),
+                            blurRadius: 20,
+                            offset: const Offset(0, 10),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  child: Center(
-                    child: Text(
-                      avatar,
-                      style: const TextStyle(fontSize: 80),
+                      child: Center(
+                        child: Text(
+                          avatar,
+                          style: const TextStyle(fontSize: 80),
+                        ),
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
           ),
-        ),
-      ),
     );
   }
 
@@ -1144,10 +1410,11 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
         centerTitle: false,
         actions: [
           IconButton(
-            icon: const Icon(
-              Icons.search,
-              color: Color(0xFF6B7280),
-            ),
+            icon: const Icon(Icons.chat_bubble_outline, color: Color(0xFF6B7280)),
+            onPressed: _openChatList,
+          ),
+          IconButton(
+            icon: const Icon(Icons.search, color: Color(0xFF6B7280)),
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Search friends coming soon!')),
@@ -1159,7 +1426,7 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
               Icons.person_add_rounded,
               color: Color(0xFF6B7280),
             ),
-            onPressed: () => _showAddFriendsScreen(),
+            onPressed: _showAddFriendsScreen,
           ),
         ],
         bottom: TabBar(
@@ -1176,19 +1443,16 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
       ),
       body: TabBarView(
         controller: _tabController,
-        children: [
-          _buildFeedTab(),
-          _buildFriendsTab(),
-          _buildChallengesTab(),
-        ],
+        children: [_buildFeedTab(), _buildFriendsTab(), _buildChallengesTab()],
       ),
-      floatingActionButton: _tabController.index == 0
-          ? FloatingActionButton(
-              onPressed: () => _showCreatePostDialog(),
-              backgroundColor: const Color(0xFF8B5CF6),
-              child: const Icon(Icons.add, color: Colors.white),
-            )
-          : null,
+      floatingActionButton:
+          _tabController.index == 0
+              ? FloatingActionButton(
+                onPressed: _showCreatePostDialog,
+                backgroundColor: const Color(0xFF8B5CF6),
+                child: const Icon(Icons.add, color: Colors.white),
+              )
+              : null,
     );
   }
 
@@ -1205,10 +1469,7 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
               gradient: const LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFFE8F4F8),
-                  Color(0xFFF0F9FF),
-                ],
+                colors: [Color(0xFFE8F4F8), Color(0xFFF0F9FF)],
               ),
               borderRadius: BorderRadius.circular(16),
             ),
@@ -1225,10 +1486,7 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
                         shape: BoxShape.circle,
                       ),
                       child: const Center(
-                        child: Text(
-                          '😊',
-                          style: TextStyle(fontSize: 24),
-                        ),
+                        child: Text('😊', style: TextStyle(fontSize: 24)),
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -1259,14 +1517,19 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
                 ),
                 const SizedBox(height: 16),
                 GestureDetector(
-                  onTap: () => _showCreatePostDialog(),
+                  onTap: _showCreatePostDialog,
                   child: Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFF8B5CF6).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFF8B5CF6).withValues(alpha: 0.3)),
+                      border: Border.all(
+                        color: const Color(0xFF8B5CF6).withValues(alpha: 0.3),
+                      ),
                     ),
                     child: const Text(
                       'What\'s on your mind?',
@@ -1323,183 +1586,198 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
         child: Stack(
           children: [
             Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // User header
-          Row(
-            children: [
-              GestureDetector(
-                onTap: () => _showMainProfileExpansion(post.userAvatar, post.userName),
-                child: Hero(
-                  tag: 'activity_profile_${post.id}',
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFF3F4F6),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: Text(
-                        post.userAvatar,
-                        style: const TextStyle(fontSize: 18),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // User header
+                Row(
                   children: [
-                    Row(
-                      children: [
-                        Text(
-                          post.userName,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF2E3A59),
+                    GestureDetector(
+                      onTap:
+                          () => _showMainProfileExpansion(
+                            post.userAvatar,
+                            post.userName,
+                          ),
+                      child: Hero(
+                        tag: 'activity_profile_${post.id}',
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFF3F4F6),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: Text(
+                              post.userAvatar,
+                              style: const TextStyle(fontSize: 18),
+                            ),
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        Text(
-                          post.mood,
-                          style: const TextStyle(fontSize: 16),
-                        ),
-                        if (post.achievement.isNotEmpty) ...[
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFEAB308).withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Text('🏆', style: TextStyle(fontSize: 10)),
-                                const SizedBox(width: 2),
-                                Text(
-                                  post.achievement,
-                                  style: const TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w500,
-                                    color: Color(0xFFEAB308),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                post.userName,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF2E3A59),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                post.mood,
+                                style: const TextStyle(fontSize: 16),
+                              ),
+                              if (post.achievement.isNotEmpty) ...[
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(
+                                      0xFFEAB308,
+                                    ).withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Text(
+                                        '🏆',
+                                        style: TextStyle(fontSize: 10),
+                                      ),
+                                      const SizedBox(width: 2),
+                                      Text(
+                                        post.achievement,
+                                        style: const TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w500,
+                                          color: Color(0xFFEAB308),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ],
+                            ],
+                          ),
+                          Text(
+                            _formatTimestamp(post.timestamp),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFF9CA3AF),
                             ),
                           ),
                         ],
-                      ],
-                    ),
-                    Text(
-                      _formatTimestamp(post.timestamp),
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF9CA3AF),
                       ),
                     ),
                   ],
                 ),
-              ),
-            ],
-          ),
 
-          const SizedBox(height: 16),
+                const SizedBox(height: 16),
 
-          // Content
-          Text(
-            post.content,
-            style: const TextStyle(
-              fontSize: 14,
-              color: Color(0xFF4B5563),
-              height: 1.5,
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // Actions
-          Row(
-            children: [
-              GestureDetector(
-                onTap: () => _toggleLike(post.id),
-                child: Row(
-                  children: [
-                    AnimatedScale(
-                      scale: _showLikeAnimation[post.id] == true ? 1.5 : 1.0,
-                      duration: const Duration(milliseconds: 200),
-                      child: Icon(
-                        _likedPosts.contains(post.id) 
-                            ? Icons.favorite 
-                            : Icons.favorite_border,
-                        size: 18,
-                        color: _likedPosts.contains(post.id) 
-                            ? const Color(0xFFEF4444) 
-                            : const Color(0xFF6B7280),
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      '${post.likes}',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: _likedPosts.contains(post.id) 
-                            ? const Color(0xFFEF4444) 
-                            : const Color(0xFF6B7280),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 24),
-              GestureDetector(
-                onTap: () => _showCommentsModal(post),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.chat_bubble_outline,
-                      size: 18,
-                      color: Color(0xFF6B7280),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      '${post.comments.length}',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Color(0xFF6B7280),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 24),
-              GestureDetector(
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Share functionality coming soon!'),
-                      backgroundColor: Color(0xFF8B5CF6),
-                    ),
-                  );
-                },
-                child: Transform.rotate(
-                  angle: -0.52, // ~30 degrees to 2 o'clock position
-                  child: const Icon(
-                    Icons.send,
-                    size: 18,
-                    color: Color(0xFF6B7280),
+                // Content
+                Text(
+                  post.content,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF4B5563),
+                    height: 1.5,
                   ),
                 ),
-              ),
-              const Spacer(),
-            ],
-          ),
-            ],
-          ),
+
+                const SizedBox(height: 16),
+
+                // Actions
+                Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () => _toggleLike(post.id),
+                      child: Row(
+                        children: [
+                          AnimatedScale(
+                            scale:
+                                _showLikeAnimation[post.id] == true ? 1.5 : 1.0,
+                            duration: const Duration(milliseconds: 200),
+                            child: Icon(
+                              _likedPosts.contains(post.id)
+                                  ? Icons.favorite
+                                  : Icons.favorite_border,
+                              size: 18,
+                              color:
+                                  _likedPosts.contains(post.id)
+                                      ? const Color(0xFFEF4444)
+                                      : const Color(0xFF6B7280),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            '${post.likes}',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color:
+                                  _likedPosts.contains(post.id)
+                                      ? const Color(0xFFEF4444)
+                                      : const Color(0xFF6B7280),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 24),
+                    GestureDetector(
+                      onTap: () => _showCommentsModal(post),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.chat_bubble_outline,
+                            size: 18,
+                            color: Color(0xFF6B7280),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            '${post.comments.length}',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Color(0xFF6B7280),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 24),
+                    GestureDetector(
+                      onTap: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Share functionality coming soon!'),
+                            backgroundColor: Color(0xFF8B5CF6),
+                          ),
+                        );
+                      },
+                      child: Transform.rotate(
+                        angle: -0.52, // ~30 degrees to 2 o'clock position
+                        child: const Icon(
+                          Icons.send,
+                          size: 18,
+                          color: Color(0xFF6B7280),
+                        ),
+                      ),
+                    ),
+                    const Spacer(),
+                  ],
+                ),
+              ],
+            ),
           ],
         ),
       ),
@@ -1519,10 +1797,7 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
               gradient: const LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFFE8F4F8),
-                  Color(0xFFF0F9FF),
-                ],
+                colors: [Color(0xFFE8F4F8), Color(0xFFF0F9FF)],
               ),
               borderRadius: BorderRadius.circular(16),
             ),
@@ -1676,30 +1951,39 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
                   const SizedBox(height: 8),
                   Wrap(
                     spacing: 6,
-                    children: friend.achievements.take(2).map((achievement) => Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFEAB308).withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        achievement,
-                        style: const TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w500,
-                          color: Color(0xFFEAB308),
-                        ),
-                      ),
-                    )).toList(),
+                    children:
+                        friend.achievements
+                            .take(2)
+                            .map(
+                              (achievement) => Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(
+                                    0xFFEAB308,
+                                  ).withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  achievement,
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w500,
+                                    color: Color(0xFFEAB308),
+                                  ),
+                                ),
+                              ),
+                            )
+                            .toList(),
                   ),
                 ],
               ],
             ),
           ),
           GestureDetector(
-            onTap: () {
-              // Message friend
-            },
+            onTap: () => _messageUser(friend),
             child: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
@@ -1731,20 +2015,17 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
               gradient: const LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFFE8F4F8),
-                  Color(0xFFF0F9FF),
-                ],
+                colors: [Color(0xFFE8F4F8), Color(0xFFF0F9FF)],
               ),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Row(
               children: [
-                Expanded(
+                const Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Wellness Challenges',
                         style: TextStyle(
                           fontSize: 18,
@@ -1752,8 +2033,8 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
                           color: Color(0xFF2E3A59),
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      const Text(
+                      SizedBox(height: 8),
+                      Text(
                         'Join friends in wellness goals',
                         style: TextStyle(
                           fontSize: 14,
@@ -1841,7 +2122,14 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
     );
   }
 
-  Widget _buildChallengeCard(String title, String description, String participants, String progress, double progressValue, Color color) {
+  Widget _buildChallengeCard(
+    String title,
+    String description,
+    String participants,
+    String progress,
+    double progressValue,
+    Color color,
+  ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(20),
@@ -1885,7 +2173,10 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
@@ -1942,7 +2233,12 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
     );
   }
 
-  Widget _buildUpcomingChallengeCard(String title, String description, String startDate, String friendsJoined) {
+  Widget _buildUpcomingChallengeCard(
+    String title,
+    String description,
+    String startDate,
+    String friendsJoined,
+  ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(20),
@@ -2022,9 +2318,9 @@ class _AddFriendsScreen extends StatefulWidget {
   final List<PotentialFriend> potentialFriends;
   final List<FriendRequest> friendRequests;
   final Set<String> sentRequests;
-  final Function(String) onSendRequest;
-  final Function(String) onAcceptRequest;
-  final Function(String) onDeclineRequest;
+  final void Function(String) onSendRequest;
+  final void Function(String) onAcceptRequest;
+  final void Function(String) onDeclineRequest;
 
   const _AddFriendsScreen({
     required this.potentialFriends,
@@ -2039,7 +2335,8 @@ class _AddFriendsScreen extends StatefulWidget {
   State<_AddFriendsScreen> createState() => _AddFriendsScreenState();
 }
 
-class _AddFriendsScreenState extends State<_AddFriendsScreen> with TickerProviderStateMixin {
+class _AddFriendsScreenState extends State<_AddFriendsScreen>
+    with TickerProviderStateMixin {
   late TabController _tabController;
   final TextEditingController _searchController = TextEditingController();
   List<PotentialFriend> _filteredFriends = [];
@@ -2065,13 +2362,19 @@ class _AddFriendsScreenState extends State<_AddFriendsScreen> with TickerProvide
       if (query.isEmpty) {
         _filteredFriends = widget.potentialFriends;
       } else {
-        _filteredFriends = widget.potentialFriends
-            .where((friend) =>
-                friend.name.toLowerCase().contains(query.toLowerCase()) ||
-                friend.bio.toLowerCase().contains(query.toLowerCase()) ||
-                friend.commonInterests.any((interest) =>
-                    interest.toLowerCase().contains(query.toLowerCase())))
-            .toList();
+        _filteredFriends =
+            widget.potentialFriends
+                .where(
+                  (friend) =>
+                      friend.name.toLowerCase().contains(query.toLowerCase()) ||
+                      friend.bio.toLowerCase().contains(query.toLowerCase()) ||
+                      friend.commonInterests.any(
+                        (interest) => interest.toLowerCase().contains(
+                          query.toLowerCase(),
+                        ),
+                      ),
+                )
+                .toList();
       }
     });
   }
@@ -2091,44 +2394,46 @@ class _AddFriendsScreenState extends State<_AddFriendsScreen> with TickerProvide
   }
 
   void _showProfileExpansion(String avatar, String name) {
-    showDialog(
+    showDialog<void>(
       context: context,
       barrierColor: Colors.black.withValues(alpha: 0.8),
-      builder: (context) => GestureDetector(
-        onTap: () => Navigator.pop(context),
-        child: Scaffold(
-          backgroundColor: Colors.transparent,
-          body: Center(
-            child: GestureDetector(
-              onTap: () {}, // Prevent dialog from closing when tapping the content
-              child: Hero(
-                tag: 'profile_expanded',
-                child: Container(
-                  width: 200,
-                  height: 200,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF8B5CF6).withValues(alpha: 0.15),
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.3),
-                        blurRadius: 20,
-                        offset: const Offset(0, 10),
+      builder:
+          (context) => GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: Scaffold(
+              backgroundColor: Colors.transparent,
+              body: Center(
+                child: GestureDetector(
+                  onTap:
+                      () {}, // Prevent dialog from closing when tapping the content
+                  child: Hero(
+                    tag: 'profile_expanded',
+                    child: Container(
+                      width: 200,
+                      height: 200,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF8B5CF6).withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.3),
+                            blurRadius: 20,
+                            offset: const Offset(0, 10),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  child: Center(
-                    child: Text(
-                      avatar,
-                      style: const TextStyle(fontSize: 80),
+                      child: Center(
+                        child: Text(
+                          avatar,
+                          style: const TextStyle(fontSize: 80),
+                        ),
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
           ),
-        ),
-      ),
     );
   }
 
@@ -2158,13 +2463,13 @@ class _AddFriendsScreenState extends State<_AddFriendsScreen> with TickerProvide
           labelColor: const Color(0xFF8B5CF6),
           unselectedLabelColor: const Color(0xFF6B7280),
           tabs: [
-            Tab(
+            const Tab(
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.search, size: 18),
-                  const SizedBox(width: 8),
-                  const Text('Discover'),
+                  Icon(Icons.search, size: 18),
+                  SizedBox(width: 8),
+                  Text('Discover'),
                 ],
               ),
             ),
@@ -2178,13 +2483,13 @@ class _AddFriendsScreenState extends State<_AddFriendsScreen> with TickerProvide
                 ],
               ),
             ),
-            Tab(
+            const Tab(
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.people, size: 18),
-                  const SizedBox(width: 8),
-                  const Text('Suggested'),
+                  Icon(Icons.people, size: 18),
+                  SizedBox(width: 8),
+                  Text('Suggested'),
                 ],
               ),
             ),
@@ -2230,10 +2535,7 @@ class _AddFriendsScreenState extends State<_AddFriendsScreen> with TickerProvide
                 icon: Icon(Icons.search, color: Color(0xFF8B5CF6)),
                 hintStyle: TextStyle(color: Color(0xFF9CA3AF)),
               ),
-              style: const TextStyle(
-                color: Color(0xFF2E3A59),
-                fontSize: 16,
-              ),
+              style: const TextStyle(color: Color(0xFF2E3A59), fontSize: 16),
             ),
           ),
 
@@ -2241,40 +2543,43 @@ class _AddFriendsScreenState extends State<_AddFriendsScreen> with TickerProvide
 
           // Results
           Expanded(
-            child: _filteredFriends.isEmpty
-                ? const Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.search_off,
-                          size: 60,
-                          color: Color(0xFFE5E7EB),
-                        ),
-                        SizedBox(height: 16),
-                        Text(
-                          'No users found',
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: Color(0xFF6B7280),
+            child:
+                _filteredFriends.isEmpty
+                    ? const Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.search_off,
+                            size: 60,
+                            color: Color(0xFFE5E7EB),
                           ),
-                        ),
-                        SizedBox(height: 8),
-                        Text(
-                          'Try different search terms',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Color(0xFF9CA3AF),
+                          SizedBox(height: 16),
+                          Text(
+                            'No users found',
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Color(0xFF6B7280),
+                            ),
                           ),
-                        ),
-                      ],
+                          SizedBox(height: 8),
+                          Text(
+                            'Try different search terms',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Color(0xFF9CA3AF),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                    : ListView.builder(
+                      itemCount: _filteredFriends.length,
+                      itemBuilder:
+                          (context, index) => _buildPotentialFriendCard(
+                            _filteredFriends[index],
+                          ),
                     ),
-                  )
-                : ListView.builder(
-                    itemCount: _filteredFriends.length,
-                    itemBuilder: (context, index) =>
-                        _buildPotentialFriendCard(_filteredFriends[index]),
-                  ),
           ),
         ],
       ),
@@ -2284,54 +2589,46 @@ class _AddFriendsScreenState extends State<_AddFriendsScreen> with TickerProvide
   Widget _buildRequestsTab() {
     return Padding(
       padding: const EdgeInsets.all(16),
-      child: _currentFriendRequests.isEmpty
-          ? const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.inbox,
-                    size: 60,
-                    color: Color(0xFFE5E7EB),
-                  ),
-                  SizedBox(height: 16),
-                  Text(
-                    'No friend requests',
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Color(0xFF6B7280),
+      child:
+          _currentFriendRequests.isEmpty
+              ? const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.inbox, size: 60, color: Color(0xFFE5E7EB)),
+                    SizedBox(height: 16),
+                    Text(
+                      'No friend requests',
+                      style: TextStyle(fontSize: 18, color: Color(0xFF6B7280)),
                     ),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    'When someone sends you a friend request, it will appear here',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFF9CA3AF),
+                    SizedBox(height: 8),
+                    Text(
+                      'When someone sends you a friend request, it will appear here',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 14, color: Color(0xFF9CA3AF)),
                     ),
-                  ),
-                ],
+                  ],
+                ),
+              )
+              : ListView.builder(
+                itemCount: _currentFriendRequests.length,
+                itemBuilder: (context, index) {
+                  // Safety check to prevent RangeError
+                  if (index >= _currentFriendRequests.length) {
+                    return const SizedBox.shrink();
+                  }
+                  return _buildFriendRequestCard(_currentFriendRequests[index]);
+                },
               ),
-            )
-          : ListView.builder(
-              itemCount: _currentFriendRequests.length,
-              itemBuilder: (context, index) {
-                // Safety check to prevent RangeError
-                if (index >= _currentFriendRequests.length) {
-                  return const SizedBox.shrink();
-                }
-                return _buildFriendRequestCard(_currentFriendRequests[index]);
-              },
-            ),
     );
   }
 
   Widget _buildSuggestedTab() {
-    final suggestedFriends = widget.potentialFriends
-        .where((friend) => friend.mutualFriends > 0)
-        .toList()
-      ..sort((a, b) => b.mutualFriends.compareTo(a.mutualFriends));
+    final suggestedFriends =
+        widget.potentialFriends
+            .where((friend) => friend.mutualFriends > 0)
+            .toList()
+          ..sort((a, b) => b.mutualFriends.compareTo(a.mutualFriends));
 
     return Padding(
       padding: const EdgeInsets.all(16),
@@ -2349,17 +2646,15 @@ class _AddFriendsScreenState extends State<_AddFriendsScreen> with TickerProvide
           const SizedBox(height: 8),
           const Text(
             'Based on mutual friends and shared interests',
-            style: TextStyle(
-              fontSize: 14,
-              color: Color(0xFF6B7280),
-            ),
+            style: TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
           ),
           const SizedBox(height: 20),
           Expanded(
             child: ListView.builder(
               itemCount: suggestedFriends.length,
-              itemBuilder: (context, index) =>
-                  _buildPotentialFriendCard(suggestedFriends[index]),
+              itemBuilder:
+                  (context, index) =>
+                      _buildPotentialFriendCard(suggestedFriends[index]),
             ),
           ),
         ],
@@ -2368,7 +2663,8 @@ class _AddFriendsScreenState extends State<_AddFriendsScreen> with TickerProvide
   }
 
   Widget _buildPotentialFriendCard(PotentialFriend friend) {
-    final isRequested = friend.isRequested || widget.sentRequests.contains(friend.id);
+    final isRequested =
+        friend.isRequested || widget.sentRequests.contains(friend.id);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -2437,11 +2733,19 @@ class _AddFriendsScreenState extends State<_AddFriendsScreen> with TickerProvide
               ),
               // Add Friend Button
               ElevatedButton(
-                onPressed: isRequested ? null : () => widget.onSendRequest(friend.id),
+                onPressed:
+                    isRequested ? null : () => widget.onSendRequest(friend.id),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: isRequested ? const Color(0xFFE5E7EB) : const Color(0xFF8B5CF6),
-                  foregroundColor: isRequested ? const Color(0xFF6B7280) : Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  backgroundColor:
+                      isRequested
+                          ? const Color(0xFFE5E7EB)
+                          : const Color(0xFF8B5CF6),
+                  foregroundColor:
+                      isRequested ? const Color(0xFF6B7280) : Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
                   ),
@@ -2485,21 +2789,31 @@ class _AddFriendsScreenState extends State<_AddFriendsScreen> with TickerProvide
             Wrap(
               spacing: 8,
               runSpacing: 4,
-              children: friend.commonInterests.map((interest) => Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF8B5CF6).withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  interest,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Color(0xFF8B5CF6),
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              )).toList(),
+              children:
+                  friend.commonInterests
+                      .map(
+                        (interest) => Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(
+                              0xFF8B5CF6,
+                            ).withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            interest,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFF8B5CF6),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      )
+                      .toList(),
             ),
           ],
         ],
@@ -2529,7 +2843,11 @@ class _AddFriendsScreenState extends State<_AddFriendsScreen> with TickerProvide
           Row(
             children: [
               GestureDetector(
-                onTap: () => _showProfileExpansion(request.userAvatar, request.userName),
+                onTap:
+                    () => _showProfileExpansion(
+                      request.userAvatar,
+                      request.userName,
+                    ),
                 child: Hero(
                   tag: 'profile_${request.id}',
                   child: Container(
@@ -2645,10 +2963,11 @@ class _AddFriendsScreenState extends State<_AddFriendsScreen> with TickerProvide
     );
   }
 
+
   String _formatTimestamp(DateTime timestamp) {
     final now = DateTime.now();
     final difference = now.difference(timestamp);
-    
+
     if (difference.inMinutes < 1) {
       return 'Just now';
     } else if (difference.inHours < 1) {
