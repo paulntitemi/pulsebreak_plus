@@ -1,6 +1,5 @@
-// lib/features/onboarding/widgets/loading_indicator.dart
 import 'package:flutter/material.dart';
-import '../../../core/constants/app_colors.dart';
+import '../../core/constants/app_colors.dart';
 
 class LoadingIndicator extends StatefulWidget {
   const LoadingIndicator({super.key});

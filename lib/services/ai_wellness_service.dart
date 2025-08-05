@@ -42,7 +42,8 @@ class AIWellnessService {
       );
 
       if (response.statusCode == 200) {
-        return AIChatResponse.fromJson(jsonDecode(response.body));
+        final Map<String, dynamic> responseData = jsonDecode(response.body) as Map<String, dynamic>;
+        return AIChatResponse.fromJson(responseData);
       } else if (response.statusCode == 429) {
         throw AIException('Rate limit exceeded. Please wait a moment and try again.');
       } else {
@@ -79,7 +80,8 @@ class AIWellnessService {
       );
 
       if (response.statusCode == 200) {
-        return MoodAnalysisResponse.fromJson(jsonDecode(response.body));
+        final Map<String, dynamic> responseData = jsonDecode(response.body) as Map<String, dynamic>;
+        return MoodAnalysisResponse.fromJson(responseData);
       } else {
         throw AIException('Failed to get mood analysis: ${response.statusCode}');
       }
@@ -107,7 +109,8 @@ class AIWellnessService {
       );
 
       if (response.statusCode == 200) {
-        return WellnessRecommendationsResponse.fromJson(jsonDecode(response.body));
+        final Map<String, dynamic> responseData = jsonDecode(response.body) as Map<String, dynamic>;
+        return WellnessRecommendationsResponse.fromJson(responseData);
       } else {
         throw AIException('Failed to get recommendations: ${response.statusCode}');
       }
@@ -135,7 +138,8 @@ class AIWellnessService {
       );
 
       if (response.statusCode == 200) {
-        return GoalResponse.fromJson(jsonDecode(response.body));
+        final Map<String, dynamic> responseData = jsonDecode(response.body) as Map<String, dynamic>;
+        return GoalResponse.fromJson(responseData);
       } else {
         throw AIException('Failed to get goal suggestions: ${response.statusCode}');
       }
@@ -165,7 +169,8 @@ class AIWellnessService {
       );
 
       if (response.statusCode == 200) {
-        return CrisisCheckResponse.fromJson(jsonDecode(response.body));
+        final Map<String, dynamic> responseData = jsonDecode(response.body) as Map<String, dynamic>;
+        return CrisisCheckResponse.fromJson(responseData);
       } else {
         throw AIException('Failed to perform crisis check: ${response.statusCode}');
       }
@@ -209,7 +214,8 @@ class AIWellnessService {
       );
 
       if (response.statusCode == 200) {
-        return CheckInResponse.fromJson(jsonDecode(response.body));
+        final Map<String, dynamic> responseData = jsonDecode(response.body) as Map<String, dynamic>;
+        return CheckInResponse.fromJson(responseData);
       } else {
         throw AIException('Failed to get check-in: ${response.statusCode}');
       }
@@ -271,12 +277,12 @@ class AIChatResponse {
 
   factory AIChatResponse.fromJson(Map<String, dynamic> json) {
     return AIChatResponse(
-      response: json['response'] ?? '',
-      conversationId: json['conversation_id'] ?? '',
+      response: json['response'] as String? ?? '',
+      conversationId: json['conversation_id'] as String? ?? '',
       suggestions: (json['suggestions'] as List<dynamic>?)
-          ?.map((s) => AISuggestion.fromJson(s))
+          ?.map((s) => AISuggestion.fromJson(s as Map<String, dynamic>))
           .toList() ?? [],
-      followUpQuestions: List<String>.from(json['follow_up_questions'] ?? []),
+      followUpQuestions: List<String>.from(json['follow_up_questions'] as List<dynamic>? ?? []),
     );
   }
 }
@@ -294,9 +300,9 @@ class AISuggestion {
 
   factory AISuggestion.fromJson(Map<String, dynamic> json) {
     return AISuggestion(
-      type: json['type'] ?? '',
-      title: json['title'] ?? '',
-      actionId: json['action_id'] ?? '',
+      type: json['type'] as String? ?? '',
+      title: json['title'] as String? ?? '',
+      actionId: json['action_id'] as String? ?? '',
     );
   }
 }
@@ -315,10 +321,10 @@ class MoodAnalysisResponse {
   factory MoodAnalysisResponse.fromJson(Map<String, dynamic> json) {
     return MoodAnalysisResponse(
       insights: (json['insights'] as List<dynamic>?)
-          ?.map((i) => MoodInsight.fromJson(i))
+          ?.map((i) => MoodInsight.fromJson(i as Map<String, dynamic>))
           .toList() ?? [],
-      moodTrends: MoodTrends.fromJson(json['mood_trends'] ?? {}),
-      personalizedTips: List<String>.from(json['personalized_tips'] ?? []),
+      moodTrends: MoodTrends.fromJson(json['mood_trends'] as Map<String, dynamic>? ?? {}),
+      personalizedTips: List<String>.from(json['personalized_tips'] as List<dynamic>? ?? []),
     );
   }
 }
@@ -340,11 +346,11 @@ class MoodInsight {
 
   factory MoodInsight.fromJson(Map<String, dynamic> json) {
     return MoodInsight(
-      type: json['type'] ?? '',
-      title: json['title'] ?? '',
-      description: json['description'] ?? '',
-      confidence: (json['confidence'] ?? 0.0).toDouble(),
-      recommendations: List<String>.from(json['recommendations'] ?? []),
+      type: json['type'] as String? ?? '',
+      title: json['title'] as String? ?? '',
+      description: json['description'] as String? ?? '',
+      confidence: (json['confidence'] as num? ?? 0.0).toDouble(),
+      recommendations: List<String>.from(json['recommendations'] as List<dynamic>? ?? []),
     );
   }
 }
@@ -362,9 +368,9 @@ class MoodTrends {
 
   factory MoodTrends.fromJson(Map<String, dynamic> json) {
     return MoodTrends(
-      overallDirection: json['overall_direction'] ?? '',
-      keyFactors: List<String>.from(json['key_factors'] ?? []),
-      concernAreas: List<String>.from(json['concern_areas'] ?? []),
+      overallDirection: json['overall_direction'] as String? ?? '',
+      keyFactors: List<String>.from(json['key_factors'] as List<dynamic>? ?? []),
+      concernAreas: List<String>.from(json['concern_areas'] as List<dynamic>? ?? []),
     );
   }
 }
@@ -383,10 +389,10 @@ class WellnessRecommendationsResponse {
   factory WellnessRecommendationsResponse.fromJson(Map<String, dynamic> json) {
     return WellnessRecommendationsResponse(
       recommendations: (json['recommendations'] as List<dynamic>?)
-          ?.map((r) => WellnessRecommendation.fromJson(r))
+          ?.map((r) => WellnessRecommendation.fromJson(r as Map<String, dynamic>))
           .toList() ?? [],
-      reasoning: json['reasoning'] ?? '',
-      expectedOutcomes: List<String>.from(json['expected_outcomes'] ?? []),
+      reasoning: json['reasoning'] as String? ?? '',
+      expectedOutcomes: List<String>.from(json['expected_outcomes'] as List<dynamic>? ?? []),
     );
   }
 }
@@ -414,14 +420,14 @@ class WellnessRecommendation {
 
   factory WellnessRecommendation.fromJson(Map<String, dynamic> json) {
     return WellnessRecommendation(
-      id: json['id'] ?? '',
-      type: json['type'] ?? '',
-      title: json['title'] ?? '',
-      description: json['description'] ?? '',
-      difficulty: json['difficulty'] ?? '',
-      estimatedTime: json['estimated_time'] ?? '',
-      steps: List<String>.from(json['steps'] ?? []),
-      trackingMetrics: List<String>.from(json['tracking_metrics'] ?? []),
+      id: json['id'] as String? ?? '',
+      type: json['type'] as String? ?? '',
+      title: json['title'] as String? ?? '',
+      description: json['description'] as String? ?? '',
+      difficulty: json['difficulty'] as String? ?? '',
+      estimatedTime: json['estimated_time'] as String? ?? '',
+      steps: List<String>.from(json['steps'] as List<dynamic>? ?? []),
+      trackingMetrics: List<String>.from(json['tracking_metrics'] as List<dynamic>? ?? []),
     );
   }
 }
@@ -477,10 +483,10 @@ class GoalResponse {
   factory GoalResponse.fromJson(Map<String, dynamic> json) {
     return GoalResponse(
       suggestedGoals: (json['suggested_goals'] as List<dynamic>?)
-          ?.map((g) => SuggestedGoal.fromJson(g))
+          ?.map((g) => SuggestedGoal.fromJson(g as Map<String, dynamic>))
           .toList() ?? [],
       goalAdjustments: (json['goal_adjustments'] as List<dynamic>?)
-          ?.map((a) => GoalAdjustment.fromJson(a))
+          ?.map((a) => GoalAdjustment.fromJson(a as Map<String, dynamic>))
           .toList() ?? [],
     );
   }
@@ -505,13 +511,13 @@ class SuggestedGoal {
 
   factory SuggestedGoal.fromJson(Map<String, dynamic> json) {
     return SuggestedGoal(
-      title: json['title'] ?? '',
-      type: json['type'] ?? '',
-      difficulty: json['difficulty'] ?? '',
-      timeline: json['timeline'] ?? '',
-      successFactors: List<String>.from(json['success_factors'] ?? []),
+      title: json['title'] as String? ?? '',
+      type: json['type'] as String? ?? '',
+      difficulty: json['difficulty'] as String? ?? '',
+      timeline: json['timeline'] as String? ?? '',
+      successFactors: List<String>.from(json['success_factors'] as List<dynamic>? ?? []),
       milestones: (json['milestones'] as List<dynamic>?)
-          ?.map((m) => GoalMilestone.fromJson(m))
+          ?.map((m) => GoalMilestone.fromJson(m as Map<String, dynamic>))
           .toList() ?? [],
     );
   }
@@ -528,8 +534,8 @@ class GoalMilestone {
 
   factory GoalMilestone.fromJson(Map<String, dynamic> json) {
     return GoalMilestone(
-      day: json['day'] ?? 0,
-      description: json['description'] ?? '',
+      day: json['day'] as int? ?? 0,
+      description: json['description'] as String? ?? '',
     );
   }
 }
@@ -547,9 +553,9 @@ class GoalAdjustment {
 
   factory GoalAdjustment.fromJson(Map<String, dynamic> json) {
     return GoalAdjustment(
-      goalId: json['goal_id'] ?? '',
-      suggestedChanges: json['suggested_changes'] ?? '',
-      reasoning: json['reasoning'] ?? '',
+      goalId: json['goal_id'] as String? ?? '',
+      suggestedChanges: json['suggested_changes'] as String? ?? '',
+      reasoning: json['reasoning'] as String? ?? '',
     );
   }
 }
@@ -569,12 +575,12 @@ class CrisisCheckResponse {
 
   factory CrisisCheckResponse.fromJson(Map<String, dynamic> json) {
     return CrisisCheckResponse(
-      riskLevel: json['risk_level'] ?? '',
+      riskLevel: json['risk_level'] as String? ?? '',
       immediateRecommendations: (json['immediate_recommendations'] as List<dynamic>?)
-          ?.map((r) => ImmediateRecommendation.fromJson(r))
+          ?.map((r) => ImmediateRecommendation.fromJson(r as Map<String, dynamic>))
           .toList() ?? [],
-      copingStrategies: List<String>.from(json['coping_strategies'] ?? []),
-      followUp: FollowUp.fromJson(json['follow_up'] ?? {}),
+      copingStrategies: List<String>.from(json['coping_strategies'] as List<dynamic>? ?? []),
+      followUp: FollowUp.fromJson(json['follow_up'] as Map<String, dynamic>? ?? {}),
     );
   }
 }
@@ -592,10 +598,10 @@ class ImmediateRecommendation {
 
   factory ImmediateRecommendation.fromJson(Map<String, dynamic> json) {
     return ImmediateRecommendation(
-      type: json['type'] ?? '',
-      message: json['message'] ?? '',
+      type: json['type'] as String? ?? '',
+      message: json['message'] as String? ?? '',
       resources: (json['resources'] as List<dynamic>?)
-          ?.map((r) => CrisisResource.fromJson(r))
+          ?.map((r) => CrisisResource.fromJson(r as Map<String, dynamic>))
           .toList() ?? [],
     );
   }
@@ -614,9 +620,9 @@ class CrisisResource {
 
   factory CrisisResource.fromJson(Map<String, dynamic> json) {
     return CrisisResource(
-      name: json['name'] ?? '',
-      contact: json['contact'] ?? '',
-      available: json['available'] ?? '',
+      name: json['name'] as String? ?? '',
+      contact: json['contact'] as String? ?? '',
+      available: json['available'] as String? ?? '',
     );
   }
 }
@@ -632,8 +638,8 @@ class FollowUp {
 
   factory FollowUp.fromJson(Map<String, dynamic> json) {
     return FollowUp(
-      checkInHours: json['check_in_hours'] ?? 24,
-      escalationTriggers: List<String>.from(json['escalation_triggers'] ?? []),
+      checkInHours: json['check_in_hours'] as int? ?? 24,
+      escalationTriggers: List<String>.from(json['escalation_triggers'] as List<dynamic>? ?? []),
     );
   }
 }
@@ -649,9 +655,9 @@ class CheckInResponse {
 
   factory CheckInResponse.fromJson(Map<String, dynamic> json) {
     return CheckInResponse(
-      checkIn: CheckIn.fromJson(json['check_in'] ?? {}),
+      checkIn: CheckIn.fromJson(json['check_in'] as Map<String, dynamic>? ?? {}),
       suggestedActions: (json['suggested_actions'] as List<dynamic>?)
-          ?.map((a) => SuggestedAction.fromJson(a))
+          ?.map((a) => SuggestedAction.fromJson(a as Map<String, dynamic>))
           .toList() ?? [],
     );
   }
@@ -672,10 +678,10 @@ class CheckIn {
 
   factory CheckIn.fromJson(Map<String, dynamic> json) {
     return CheckIn(
-      primaryQuestion: json['primary_question'] ?? '',
-      followUpQuestions: List<String>.from(json['follow_up_questions'] ?? []),
-      moodScalePrompt: json['mood_scale_prompt'] ?? '',
-      personalizationNote: json['personalization_note'],
+      primaryQuestion: json['primary_question'] as String? ?? '',
+      followUpQuestions: List<String>.from(json['follow_up_questions'] as List<dynamic>? ?? []),
+      moodScalePrompt: json['mood_scale_prompt'] as String? ?? '',
+      personalizationNote: json['personalization_note'] as String?,
     );
   }
 }
@@ -693,9 +699,9 @@ class SuggestedAction {
 
   factory SuggestedAction.fromJson(Map<String, dynamic> json) {
     return SuggestedAction(
-      type: json['type'] ?? '',
-      title: json['title'] ?? '',
-      description: json['description'] ?? '',
+      type: json['type'] as String? ?? '',
+      title: json['title'] as String? ?? '',
+      description: json['description'] as String? ?? '',
     );
   }
 }

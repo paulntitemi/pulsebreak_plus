@@ -360,7 +360,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   void _showImagePicker() {
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(

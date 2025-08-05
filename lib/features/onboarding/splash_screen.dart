@@ -1,12 +1,11 @@
-// lib/features/onboarding/screens/splash_screen.dart
 import 'package:flutter/material.dart';
-import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/app_strings.dart';
-import '../../../core/theme/text_styles.dart';
+import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_strings.dart';
+import '../../core/theme/text_styles.dart';
 import '../widgets/animated_logo.dart';
 import '../widgets/animated_background.dart';
 import '../widgets/loading_indicator.dart';
-import 'onboarding_screen.dart'; // Add this import
+import 'onboarding_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});

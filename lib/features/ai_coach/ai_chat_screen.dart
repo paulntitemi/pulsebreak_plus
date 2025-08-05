@@ -151,7 +151,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
   }
 
   void _showBreathingExercise(AISuggestion suggestion) {
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(suggestion.title),
@@ -188,7 +188,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
   }
 
   void _showMindfulnessExercise(AISuggestion suggestion) {
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(suggestion.title),
@@ -585,7 +585,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
   }
 
   void _showChatOptions() {
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(

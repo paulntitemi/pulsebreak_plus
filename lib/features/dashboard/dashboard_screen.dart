@@ -478,7 +478,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         borderRadius: BorderRadius.circular(20),
                         onTap: () => Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => const AIChatScreen()),
+                          MaterialPageRoute<void>(builder: (context) => const AIChatScreen()),
                         ),
                         child: Padding(
                           padding: const EdgeInsets.all(24),

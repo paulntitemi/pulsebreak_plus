@@ -26,7 +26,7 @@ class _HydrationScreenState extends State<HydrationScreen> {
   int get _totalHydration => _hydrationLogs.fold(0, (sum, log) => sum + (log['amount'] as int));
 
   void _showAddHydrationModal() {
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -234,8 +234,8 @@ class _HydrationScreenState extends State<HydrationScreen> {
               Map<String, dynamic> log = entry.value;
               
               return HydrationEntryTile(
-                amount: log['amount'],
-                time: log['time'],
+                amount: log['amount'] as int,
+                time: log['time'] as String,
                 isLast: index == _hydrationLogs.length - 1,
                 onDelete: () {
                   setState(() {

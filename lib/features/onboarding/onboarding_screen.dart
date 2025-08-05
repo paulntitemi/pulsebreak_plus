@@ -67,7 +67,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     // Navigate to login screen
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => const LoginScreen()),
+      MaterialPageRoute<void>(builder: (context) => const LoginScreen()),
     );
   }
 

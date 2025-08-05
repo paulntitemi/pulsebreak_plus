@@ -38,7 +38,7 @@ class _DateSelectorState extends State<DateSelector> {
         itemBuilder: (context, index) {
           final dateInfo = dates[index];
           final isSelected = index == selectedIndex;
-          final isToday = dateInfo['isToday'];
+          final isToday = dateInfo['isToday'] as bool;
           
           return GestureDetector(
             onTap: () {
@@ -55,7 +55,7 @@ class _DateSelectorState extends State<DateSelector> {
                     ? const Color(0xFF4F8A8B)
                     : Colors.white,
                 borderRadius: BorderRadius.circular(16),
-                border: isToday && !isSelected
+                border: (isToday as bool) && !isSelected
                     ? Border.all(color: const Color(0xFF4F8A8B), width: 2)
                     : null,
                 boxShadow: isSelected
@@ -78,7 +78,7 @@ class _DateSelectorState extends State<DateSelector> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    dateInfo['day'],
+                    dateInfo['day'] as String,
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
@@ -98,7 +98,7 @@ class _DateSelectorState extends State<DateSelector> {
                           : const Color(0xFF2E3A59),
                     ),
                   ),
-                  if (isToday && !isSelected) ...[
+                  if ((isToday as bool) && !isSelected) ...[
                     const SizedBox(height: 2),
                     Container(
                       width: 4,

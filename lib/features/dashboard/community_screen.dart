@@ -288,7 +288,7 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
       'Mindful moment',
     ];
 
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -586,7 +586,7 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
   void _showCommentsModal(CommunityPost post) {
     final TextEditingController commentController = TextEditingController();
     
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,

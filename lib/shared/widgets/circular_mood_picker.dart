@@ -4,7 +4,7 @@ import 'dart:math' as math;
 class CircularMoodPicker extends StatelessWidget {
   final List<Map<String, dynamic>> moods;
   final String? selectedMood;
-  final Function(String) onMoodSelected;
+  final void Function(String) onMoodSelected;
 
   const CircularMoodPicker({
     super.key,
@@ -98,12 +98,7 @@ class CircularMoodPicker extends StatelessWidget {
             return Transform.translate(
               offset: Offset(x, y),
               child: GestureDetector(
-                onTap: () {
-                  print('=== MOOD PICKER TAPPED ===');
-                  print('Mood tapped: ${mood['label']}');
-                  onMoodSelected(mood['label']);
-                  print('=== MOOD PICKER CALLBACK CALLED ===');
-                },
+                onTap: () => onMoodSelected(mood['label'] as String),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
                   width: isSelected ? 70 : 60,
@@ -111,18 +106,18 @@ class CircularMoodPicker extends StatelessWidget {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: isSelected 
-                        ? mood['color'].withValues(alpha: 0.1)
+                        ? (mood['color'] as Color).withValues(alpha: 0.1)
                         : Colors.white,
                     border: Border.all(
                       color: isSelected 
-                          ? mood['color']
+                          ? (mood['color'] as Color)
                           : const Color(0xFFE5E7EB),
                       width: isSelected ? 3 : 2,
                     ),
                     boxShadow: [
                       BoxShadow(
                         color: isSelected 
-                            ? mood['color'].withValues(alpha: 0.3)
+                            ? (mood['color'] as Color).withValues(alpha: 0.3)
                             : Colors.black.withValues(alpha: 0.1),
                         blurRadius: isSelected ? 12 : 8,
                         offset: const Offset(0, 4),
@@ -131,7 +126,7 @@ class CircularMoodPicker extends StatelessWidget {
                   ),
                   child: Center(
                     child: Text(
-                      mood['emoji'],
+                      mood['emoji'] as String,
                       style: TextStyle(
                         fontSize: isSelected ? 32 : 28,
                       ),
@@ -148,12 +143,12 @@ class CircularMoodPicker extends StatelessWidget {
 
   String _getMoodEmoji(String moodLabel) {
     final mood = moods.firstWhere((m) => m['label'] == moodLabel);
-    return mood['emoji'];
+    return mood['emoji'] as String;
   }
 
   Color _getMoodColor(String moodLabel) {
     final mood = moods.firstWhere((m) => m['label'] == moodLabel);
-    return mood['color'];
+    return mood['color'] as Color;
   }
 
   Color _getMoodBackgroundColor(String moodLabel) {

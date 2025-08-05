@@ -533,7 +533,7 @@ class _JournalScreenState extends State<JournalScreen> {
   }
 
   void _showCreateEntryDialog() {
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -556,7 +556,7 @@ class _JournalScreenState extends State<JournalScreen> {
   }
 
   void _showEntryDetails(JournalEntry entry) {
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -566,7 +566,7 @@ class _JournalScreenState extends State<JournalScreen> {
 
 
   void _showFilterDialog() {
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,

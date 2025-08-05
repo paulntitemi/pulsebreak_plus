@@ -17,7 +17,7 @@ class _SmartRemindersScreenState extends State<SmartRemindersScreen> {
       'frequency': 'Daily',
       'category': 'Mood',
       'icon': Icons.sentiment_satisfied,
-      'color': Color(0xFF8B5CF6),
+      'color': const Color(0xFF8B5CF6),
       'isEnabled': true,
       'isSmartTimed': true,
       'smartNote': 'Optimized for your morning routine',
@@ -30,7 +30,7 @@ class _SmartRemindersScreenState extends State<SmartRemindersScreen> {
       'frequency': 'Multiple daily',
       'category': 'Hydration',
       'icon': Icons.water_drop,
-      'color': Color(0xFF0EA5E9),
+      'color': const Color(0xFF0EA5E9),
       'isEnabled': true,
       'isSmartTimed': false,
       'smartNote': null,
@@ -43,7 +43,7 @@ class _SmartRemindersScreenState extends State<SmartRemindersScreen> {
       'frequency': 'Weekdays',
       'category': 'Stress',
       'icon': Icons.psychology,
-      'color': Color(0xFF10B981),
+      'color': const Color(0xFF10B981),
       'isEnabled': false,
       'isSmartTimed': true,
       'smartNote': 'Timed for your typical stress peak',
@@ -56,7 +56,7 @@ class _SmartRemindersScreenState extends State<SmartRemindersScreen> {
       'frequency': 'Daily',
       'category': 'Sleep',
       'icon': Icons.bedtime,
-      'color': Color(0xFF8B5CF6),
+      'color': const Color(0xFF8B5CF6),
       'isEnabled': true,
       'isSmartTimed': true,
       'smartNote': 'Based on your optimal bedtime',
@@ -69,7 +69,7 @@ class _SmartRemindersScreenState extends State<SmartRemindersScreen> {
       'frequency': 'Daily',
       'category': 'Mindfulness',
       'icon': Icons.spa,
-      'color': Color(0xFFEAB308),
+      'color': const Color(0xFFEAB308),
       'isEnabled': true,
       'isSmartTimed': false,
       'smartNote': null,
@@ -174,7 +174,7 @@ class _SmartRemindersScreenState extends State<SmartRemindersScreen> {
                   Expanded(
                     child: _buildStatCard(
                       'Active',
-                      '${_reminders.where((r) => r['isEnabled']).length}',
+                      '${_reminders.where((r) => r['isEnabled'] as bool).length}',
                       'reminders',
                       Color(0xFF10B981),
                     ),
@@ -183,7 +183,7 @@ class _SmartRemindersScreenState extends State<SmartRemindersScreen> {
                   Expanded(
                     child: _buildStatCard(
                       'Smart Timed',
-                      '${_reminders.where((r) => r['isSmartTimed']).length}',
+                      '${_reminders.where((r) => r['isSmartTimed'] as bool).length}',
                       'optimized',
                       Color(0xFF8B5CF6),
                     ),
@@ -338,12 +338,12 @@ class _SmartRemindersScreenState extends State<SmartRemindersScreen> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: reminder['color'].withValues(alpha: 0.1),
+                    color: (reminder['color'] as Color).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
-                    reminder['icon'],
-                    color: reminder['color'],
+                    reminder['icon'] as IconData,
+                    color: reminder['color'] as Color,
                     size: 20,
                   ),
                 ),
@@ -355,14 +355,14 @@ class _SmartRemindersScreenState extends State<SmartRemindersScreen> {
                       Row(
                         children: [
                           Text(
-                            reminder['title'],
+                            reminder['title'] as String,
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
                               color: Color(0xFF2E3A59),
                             ),
                           ),
-                          if (reminder['isSmartTimed']) ...[
+                          if (reminder['isSmartTimed'] as bool) ...[
                             const SizedBox(width: 8),
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -395,10 +395,10 @@ class _SmartRemindersScreenState extends State<SmartRemindersScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        reminder['category'],
+                        reminder['category'] as String,
                         style: TextStyle(
                           fontSize: 12,
-                          color: reminder['color'],
+                          color: reminder['color'] as Color,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -406,13 +406,13 @@ class _SmartRemindersScreenState extends State<SmartRemindersScreen> {
                   ),
                 ),
                 Switch(
-                  value: reminder['isEnabled'],
+                  value: reminder['isEnabled'] as bool,
                   onChanged: (value) {
                     setState(() {
                       reminder['isEnabled'] = value;
                     });
                   },
-                  activeColor: reminder['color'],
+                  activeColor: reminder['color'] as Color,
                 ),
               ],
             ),
@@ -421,7 +421,7 @@ class _SmartRemindersScreenState extends State<SmartRemindersScreen> {
 
             // Description
             Text(
-              reminder['description'],
+              reminder['description'] as String,
               style: const TextStyle(
                 fontSize: 14,
                 color: Color(0xFF6B7280),
@@ -450,7 +450,7 @@ class _SmartRemindersScreenState extends State<SmartRemindersScreen> {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        reminder['time'],
+                        reminder['time'] as String,
                         style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -477,7 +477,7 @@ class _SmartRemindersScreenState extends State<SmartRemindersScreen> {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        reminder['frequency'],
+                        reminder['frequency'] as String,
                         style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -512,7 +512,7 @@ class _SmartRemindersScreenState extends State<SmartRemindersScreen> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        reminder['smartNote'],
+                        reminder['smartNote'] as String,
                         style: const TextStyle(
                           fontSize: 12,
                           color: Color(0xFF8B5CF6),
@@ -536,7 +536,7 @@ class _SmartRemindersScreenState extends State<SmartRemindersScreen> {
                       _editReminder(reminder);
                     },
                     style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: reminder['color']),
+                      side: BorderSide(color: reminder['color'] as Color),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -546,7 +546,7 @@ class _SmartRemindersScreenState extends State<SmartRemindersScreen> {
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: reminder['color'],
+                        color: reminder['color'] as Color,
                       ),
                     ),
                   ),
@@ -558,7 +558,7 @@ class _SmartRemindersScreenState extends State<SmartRemindersScreen> {
                       _testReminder(reminder);
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: reminder['color'],
+                      backgroundColor: reminder['color'] as Color,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -582,7 +582,7 @@ class _SmartRemindersScreenState extends State<SmartRemindersScreen> {
   }
 
   void _showAddReminderDialog() {
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Add Custom Reminder'),
@@ -626,20 +626,20 @@ class _SmartRemindersScreenState extends State<SmartRemindersScreen> {
   }
 
   void _editReminder(Map<String, dynamic> reminder) {
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Edit ${reminder['title']}'),
+        title: Text('Edit ${reminder['title'] as String}'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('Current settings:'),
             const SizedBox(height: 8),
-            Text('Time: ${reminder['time']}'),
-            Text('Frequency: ${reminder['frequency']}'),
-            Text('Category: ${reminder['category']}'),
-            if (reminder['isSmartTimed'])
+            Text('Time: ${reminder['time'] as String}'),
+            Text('Frequency: ${reminder['frequency'] as String}'),
+            Text('Category: ${reminder['category'] as String}'),
+            if (reminder['isSmartTimed'] as bool)
               const Text('Smart timing: Enabled'),
           ],
         ),
@@ -653,13 +653,13 @@ class _SmartRemindersScreenState extends State<SmartRemindersScreen> {
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Editing ${reminder['title']} coming soon!'),
-                  backgroundColor: reminder['color'],
+                  content: Text('Editing ${reminder['title'] as String} coming soon!'),
+                  backgroundColor: reminder['color'] as Color,
                 ),
               );
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: reminder['color'],
+              backgroundColor: reminder['color'] as Color,
             ),
             child: const Text('Save Changes', style: TextStyle(color: Colors.white)),
           ),
@@ -673,7 +673,7 @@ class _SmartRemindersScreenState extends State<SmartRemindersScreen> {
       SnackBar(
         content: Row(
           children: [
-            Icon(reminder['icon'], color: Colors.white, size: 20),
+            Icon(reminder['icon'] as IconData, color: Colors.white, size: 20),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -681,14 +681,14 @@ class _SmartRemindersScreenState extends State<SmartRemindersScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    reminder['title'],
+                    reminder['title'] as String,
                     style: const TextStyle(
                       fontWeight: FontWeight.w600,
                       color: Colors.white,
                     ),
                   ),
                   Text(
-                    reminder['description'],
+                    reminder['description'] as String,
                     style: const TextStyle(
                       fontSize: 12,
                       color: Colors.white,
@@ -699,7 +699,7 @@ class _SmartRemindersScreenState extends State<SmartRemindersScreen> {
             ),
           ],
         ),
-        backgroundColor: reminder['color'],
+        backgroundColor: reminder['color'] as Color,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),

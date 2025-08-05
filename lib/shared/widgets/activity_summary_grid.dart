@@ -30,7 +30,7 @@ class _ActivitySummaryGridState extends State<ActivitySummaryGrid> {
   }
 
   void _showCheckInStats(BuildContext context) {
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -120,7 +120,7 @@ class _ActivitySummaryGridState extends State<ActivitySummaryGrid> {
   }
 
   void _showStreakDetails(BuildContext context) {
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,

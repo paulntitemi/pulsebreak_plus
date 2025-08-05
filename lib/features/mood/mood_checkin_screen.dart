@@ -24,23 +24,15 @@ class _MoodCheckinScreenState extends State<MoodCheckinScreen> {
   ];
 
   void _saveMoodEntry() {
-    print('=== SAVE MOOD ENTRY CALLED ===');
-    print('Selected mood: $_selectedMood');
-    print('Selected categories: $_selectedCategories');
-    print('Notes: $_notes');
     
     if (_selectedMood != null) {
       try {
-        print('About to save mood to service...');
-        
         // Save mood to service
         MoodService.instance.saveMoodEntry(
           moodLabel: _selectedMood!,
           categories: _selectedCategories,
           notes: _notes,
         );
-
-        print('Mood saved successfully! Showing snackbar...');
 
         // Show success message
         ScaffoldMessenger.of(context).showSnackBar(
@@ -51,19 +43,13 @@ class _MoodCheckinScreenState extends State<MoodCheckinScreen> {
           ),
         );
 
-        print('About to navigate to dashboard...');
-
         // Navigate to dashboard and clear all previous routes
         Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const MainNavigation()),
+          MaterialPageRoute<void>(builder: (context) => const MainNavigation()),
           (Route<dynamic> route) => false,
         );
 
-        print('Navigation complete!');
-        
       } catch (e) {
-        print('=== ERROR OCCURRED ===');
-        print('Error saving mood: $e');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error saving mood: $e'),
@@ -72,7 +58,6 @@ class _MoodCheckinScreenState extends State<MoodCheckinScreen> {
         );
       }
     } else {
-      print('=== NO MOOD SELECTED ===');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please select a mood first'),
@@ -80,7 +65,6 @@ class _MoodCheckinScreenState extends State<MoodCheckinScreen> {
         ),
       );
     }
-    print('=== END SAVE MOOD ENTRY ===');
   }
 
   @override
@@ -166,14 +150,9 @@ class _MoodCheckinScreenState extends State<MoodCheckinScreen> {
                   moods: _moods,
                   selectedMood: _selectedMood,
                   onMoodSelected: (mood) {
-                    print('=== MOOD SELECTION CALLBACK ===');
-                    print('Mood selected: $mood');
-                    print('Current _selectedMood before setState: $_selectedMood');
                     setState(() {
                       _selectedMood = mood;
                     });
-                    print('State updated, selected mood is now: $_selectedMood');
-                    print('=== END MOOD SELECTION ===');
                   },
                 ),
               ),
@@ -268,18 +247,7 @@ class _MoodCheckinScreenState extends State<MoodCheckinScreen> {
                 color: Colors.transparent,
                 child: InkWell(
                   borderRadius: BorderRadius.circular(16),
-                  onTap: () {
-                    print('=== INKWELL TAPPED ===');
-                    print('Button tapped! Selected mood: $_selectedMood');
-                    // Force a mood for testing if none selected
-                    if (_selectedMood == null) {
-                      print('No mood selected, setting default for testing');
-                      setState(() {
-                        _selectedMood = 'Happy';
-                      });
-                    }
-                    _saveMoodEntry();
-                  },
+                  onTap: _saveMoodEntry,
                   child: Container(
                     width: double.infinity,
                     height: 56,

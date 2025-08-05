@@ -20,8 +20,8 @@ class _WellnessChallengesScreenState extends State<WellnessChallengesScreen> wit
       'daysCompleted': 5,
       'totalDays': 7,
       'icon': Icons.water_drop,
-      'color': Color(0xFF0EA5E9),
-      'backgroundColor': Color(0xFFEBF8FF),
+      'color': const Color(0xFF0EA5E9),
+      'backgroundColor': const Color(0xFFEBF8FF),
       'reward': '50 wellness points',
       'deadline': '2 days left',
       'participants': 2847,
@@ -35,8 +35,8 @@ class _WellnessChallengesScreenState extends State<WellnessChallengesScreen> wit
       'daysCompleted': 6,
       'totalDays': 14,
       'icon': Icons.sentiment_satisfied,
-      'color': Color(0xFF8B5CF6),
-      'backgroundColor': Color(0xFFF3E8FF),
+      'color': const Color(0xFF8B5CF6),
+      'backgroundColor': const Color(0xFFF3E8FF),
       'reward': '100 wellness points',
       'deadline': '8 days left',
       'participants': 1205,
@@ -52,8 +52,8 @@ class _WellnessChallengesScreenState extends State<WellnessChallengesScreen> wit
       'duration': '21 days',
       'difficulty': 'Medium',
       'icon': Icons.bedtime,
-      'color': Color(0xFF8B5CF6),
-      'backgroundColor': Color(0xFFF3E8FF),
+      'color': const Color(0xFF8B5CF6),
+      'backgroundColor': const Color(0xFFF3E8FF),
       'reward': '200 wellness points',
       'participants': 5624,
       'featured': true,
@@ -66,8 +66,8 @@ class _WellnessChallengesScreenState extends State<WellnessChallengesScreen> wit
       'duration': '7 days',
       'difficulty': 'Easy',
       'icon': Icons.psychology,
-      'color': Color(0xFF10B981),
-      'backgroundColor': Color(0xFFECFDF5),
+      'color': const Color(0xFF10B981),
+      'backgroundColor': const Color(0xFFECFDF5),
       'reward': '75 wellness points',
       'participants': 3891,
       'featured': true,
@@ -80,8 +80,8 @@ class _WellnessChallengesScreenState extends State<WellnessChallengesScreen> wit
       'duration': '10 days',
       'difficulty': 'Hard',
       'icon': Icons.restaurant,
-      'color': Color(0xFFEAB308),
-      'backgroundColor': Color(0xFFFEF3C7),
+      'color': const Color(0xFFEAB308),
+      'backgroundColor': const Color(0xFFFEF3C7),
       'reward': '150 wellness points',
       'participants': 2156,
       'featured': false,
@@ -267,9 +267,9 @@ class _WellnessChallengesScreenState extends State<WellnessChallengesScreen> wit
           
           const SizedBox(height: 16),
           
-          _buildAchievementCard('Hydration Master', 'Completed 5 hydration challenges', Icons.water_drop, Color(0xFF0EA5E9)),
-          _buildAchievementCard('Mood Tracker', 'Tracked mood for 30 days straight', Icons.sentiment_satisfied, Color(0xFF8B5CF6)),
-          _buildAchievementCard('Sleep Champion', 'Achieved 7+ hours sleep for 21 days', Icons.bedtime, Color(0xFF10B981)),
+          _buildAchievementCard('Hydration Master', 'Completed 5 hydration challenges', Icons.water_drop, const Color(0xFF0EA5E9)),
+          _buildAchievementCard('Mood Tracker', 'Tracked mood for 30 days straight', Icons.sentiment_satisfied, const Color(0xFF8B5CF6)),
+          _buildAchievementCard('Sleep Champion', 'Achieved 7+ hours sleep for 21 days', Icons.bedtime, const Color(0xFF10B981)),
           
           const SizedBox(height: 24),
           
@@ -298,9 +298,9 @@ class _WellnessChallengesScreenState extends State<WellnessChallengesScreen> wit
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: challenge['backgroundColor'],
+        color: challenge['backgroundColor'] as Color,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: challenge['color'].withValues(alpha: 0.3)),
+        border: Border.all(color: (challenge['color'] as Color).withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -311,10 +311,10 @@ class _WellnessChallengesScreenState extends State<WellnessChallengesScreen> wit
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: challenge['color'].withValues(alpha: 0.2),
+                  color: (challenge['color'] as Color).withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(challenge['icon'], color: challenge['color'], size: 20),
+                child: Icon(challenge['icon'] as IconData, color: challenge['color'] as Color, size: 20),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -322,7 +322,7 @@ class _WellnessChallengesScreenState extends State<WellnessChallengesScreen> wit
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      challenge['title'],
+                      challenge['title'] as String,
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
@@ -330,10 +330,10 @@ class _WellnessChallengesScreenState extends State<WellnessChallengesScreen> wit
                       ),
                     ),
                     Text(
-                      challenge['category'],
+                      challenge['category'] as String,
                       style: TextStyle(
                         fontSize: 12,
-                        color: challenge['color'],
+                        color: challenge['color'] as Color,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -341,7 +341,7 @@ class _WellnessChallengesScreenState extends State<WellnessChallengesScreen> wit
                 ),
               ),
               Text(
-                challenge['deadline'],
+                challenge['deadline'] as String,
                 style: const TextStyle(
                   fontSize: 12,
                   color: Color(0xFF6B7280),
@@ -354,7 +354,7 @@ class _WellnessChallengesScreenState extends State<WellnessChallengesScreen> wit
           
           // Description
           Text(
-            challenge['description'],
+            challenge['description'] as String,
             style: const TextStyle(
               fontSize: 14,
               color: Color(0xFF6B7280),
@@ -372,16 +372,16 @@ class _WellnessChallengesScreenState extends State<WellnessChallengesScreen> wit
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: challenge['color'],
+                  color: challenge['color'] as Color,
                 ),
               ),
               const Spacer(),
               Text(
-                '${(challenge['progress'] * 100).toInt()}%',
+                '${((challenge['progress'] as double) * 100).toInt()}%',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: challenge['color'],
+                  color: challenge['color'] as Color,
                 ),
               ),
             ],
@@ -390,9 +390,9 @@ class _WellnessChallengesScreenState extends State<WellnessChallengesScreen> wit
           const SizedBox(height: 8),
           
           LinearProgressIndicator(
-            value: challenge['progress'],
-            backgroundColor: challenge['color'].withValues(alpha: 0.2),
-            valueColor: AlwaysStoppedAnimation<Color>(challenge['color']),
+            value: challenge['progress'] as double,
+            backgroundColor: (challenge['color'] as Color).withValues(alpha: 0.2),
+            valueColor: AlwaysStoppedAnimation<Color>(challenge['color'] as Color),
             minHeight: 6,
           ),
           
@@ -401,7 +401,7 @@ class _WellnessChallengesScreenState extends State<WellnessChallengesScreen> wit
           // Footer
           Row(
             children: [
-              Icon(Icons.group, color: challenge['color'], size: 16),
+              Icon(Icons.group, color: challenge['color'] as Color, size: 16),
               const SizedBox(width: 4),
               Text(
                 '${challenge['participants']} participants',
@@ -414,15 +414,15 @@ class _WellnessChallengesScreenState extends State<WellnessChallengesScreen> wit
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: challenge['color'].withValues(alpha: 0.1),
+                  color: (challenge['color'] as Color).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  challenge['reward'],
+                  challenge['reward'] as String,
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: challenge['color'],
+                    color: challenge['color'] as Color,
                   ),
                 ),
               ),
@@ -457,10 +457,10 @@ class _WellnessChallengesScreenState extends State<WellnessChallengesScreen> wit
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: challenge['backgroundColor'],
+                  color: challenge['backgroundColor'] as Color,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(challenge['icon'], color: challenge['color'], size: 20),
+                child: Icon(challenge['icon'] as IconData, color: challenge['color'] as Color, size: 20),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -470,14 +470,14 @@ class _WellnessChallengesScreenState extends State<WellnessChallengesScreen> wit
                     Row(
                       children: [
                         Text(
-                          challenge['title'],
+                          challenge['title'] as String,
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
                             color: Color(0xFF2E3A59),
                           ),
                         ),
-                        if (challenge['featured']) ...[
+                        if (challenge['featured'] as bool) ...[
                           const SizedBox(width: 8),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -498,10 +498,10 @@ class _WellnessChallengesScreenState extends State<WellnessChallengesScreen> wit
                       ],
                     ),
                     Text(
-                      challenge['category'],
+                      challenge['category'] as String,
                       style: TextStyle(
                         fontSize: 12,
-                        color: challenge['color'],
+                        color: challenge['color'] as Color,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -515,7 +515,7 @@ class _WellnessChallengesScreenState extends State<WellnessChallengesScreen> wit
           
           // Description
           Text(
-            challenge['description'],
+            challenge['description'] as String,
             style: const TextStyle(
               fontSize: 14,
               color: Color(0xFF6B7280),
@@ -528,9 +528,9 @@ class _WellnessChallengesScreenState extends State<WellnessChallengesScreen> wit
           // Challenge details
           Row(
             children: [
-              _buildDetailChip('Duration', challenge['duration']),
+              _buildDetailChip('Duration', challenge['duration'] as String),
               const SizedBox(width: 12),
-              _buildDetailChip('Difficulty', challenge['difficulty']),
+              _buildDetailChip('Difficulty', challenge['difficulty'] as String),
             ],
           ),
           
@@ -539,7 +539,7 @@ class _WellnessChallengesScreenState extends State<WellnessChallengesScreen> wit
           // Footer
           Row(
             children: [
-              Icon(Icons.group, color: challenge['color'], size: 16),
+              Icon(Icons.group, color: challenge['color'] as Color, size: 16),
               const SizedBox(width: 4),
               Text(
                 '${challenge['participants']} participants',
@@ -552,15 +552,15 @@ class _WellnessChallengesScreenState extends State<WellnessChallengesScreen> wit
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: challenge['color'].withValues(alpha: 0.1),
+                  color: (challenge['color'] as Color).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  challenge['reward'],
+                  challenge['reward'] as String,
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: challenge['color'],
+                    color: challenge['color'] as Color,
                   ),
                 ),
               ),
@@ -577,7 +577,7 @@ class _WellnessChallengesScreenState extends State<WellnessChallengesScreen> wit
                 _joinChallenge(challenge);
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: challenge['color'],
+                backgroundColor: challenge['color'] as Color,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -772,8 +772,8 @@ class _WellnessChallengesScreenState extends State<WellnessChallengesScreen> wit
           const SizedBox(height: 60),
           Container(
             padding: const EdgeInsets.all(32),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF3F4F6),
+            decoration: const BoxDecoration(
+              color: Color(0xFFF3F4F6),
               shape: BoxShape.circle,
             ),
             child: const Icon(
@@ -827,19 +827,19 @@ class _WellnessChallengesScreenState extends State<WellnessChallengesScreen> wit
   }
 
   void _joinChallenge(Map<String, dynamic> challenge) {
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Join ${challenge['title']}?'),
+        title: Text('Join ${challenge['title'] as String}?'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(challenge['description']),
+            Text(challenge['description'] as String),
             const SizedBox(height: 16),
-            Text('Duration: ${challenge['duration']}'),
-            Text('Difficulty: ${challenge['difficulty']}'),
-            Text('Reward: ${challenge['reward']}'),
+            Text('Duration: ${challenge['duration'] as String}'),
+            Text('Difficulty: ${challenge['difficulty'] as String}'),
+            Text('Reward: ${challenge['reward'] as String}'),
           ],
         ),
         actions: [
@@ -855,19 +855,19 @@ class _WellnessChallengesScreenState extends State<WellnessChallengesScreen> wit
                   ...challenge,
                   'progress': 0.0,
                   'daysCompleted': 0,
-                  'totalDays': int.parse(challenge['duration'].split(' ')[0]),
-                  'deadline': '${challenge['duration'].split(' ')[0]} days left',
+                  'totalDays': int.parse((challenge['duration'] as String).split(' ')[0]),
+                  'deadline': '${(challenge['duration'] as String).split(' ')[0]} days left',
                 });
               });
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Joined ${challenge['title']}!'),
+                  content: Text('Joined ${challenge['title'] as String}!'),
                   backgroundColor: const Color(0xFF10B981),
                 ),
               );
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: challenge['color'],
+              backgroundColor: challenge['color'] as Color,
             ),
             child: const Text('Join Challenge', style: TextStyle(color: Colors.white)),
           ),
@@ -877,7 +877,7 @@ class _WellnessChallengesScreenState extends State<WellnessChallengesScreen> wit
   }
 
   void _showChallengeInfo(BuildContext context) {
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('About Wellness Challenges'),

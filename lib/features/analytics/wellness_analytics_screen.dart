@@ -1143,7 +1143,7 @@ class _WellnessAnalyticsScreenState extends State<WellnessAnalyticsScreen> with 
   }
 
   void _showExportDialog() {
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Export Analytics'),

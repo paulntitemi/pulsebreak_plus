@@ -1,8 +1,8 @@
 // lib/features/auth/screens/login_screen.dart
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_sign_in/google_sign_in.dart';
+// import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+// import 'package:firebase_auth/firebase_auth.dart';
+// import 'package:google_sign_in/google_sign_in.dart';
 import 'package:pulsebreak_plus/features/auth/signup_screen.dart';
 import 'package:pulsebreak_plus/features/dashboard/main_navigation.dart';
 
@@ -20,9 +20,9 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isPasswordVisible = false;
   bool _isLoading = false;
 
-  // Firebase instances (lazy initialization)
-  FirebaseAuth? _auth;
-  GoogleSignIn? _googleSignIn;
+  // Firebase instances (lazy initialization) - commented out for now
+  // FirebaseAuth? _auth;
+  // GoogleSignIn? _googleSignIn;
 
   @override
   void initState() {
@@ -31,13 +31,14 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _initializeFirebase() {
-    try {
-      _auth = FirebaseAuth.instance;
-      _googleSignIn = GoogleSignIn();
-    } catch (e) {
-      // Firebase not initialized - continuing in demo mode
-      // Firebase instances will remain null
-    }
+    // Firebase initialization commented out for now
+    // try {
+    //   _auth = FirebaseAuth.instance;
+    //   _googleSignIn = GoogleSignIn();
+    // } catch (e) {
+    //   // Firebase not initialized - continuing in demo mode
+    //   // Firebase instances will remain null
+    // }
   }
 
   @override
@@ -60,29 +61,14 @@ class _LoginScreenState extends State<LoginScreen> {
       });
 
       try {
-        if (_auth != null) {
-          // Firebase email/password login
-          await _auth!.signInWithEmailAndPassword(
-            email: _emailController.text.trim(),
-            password: _passwordController.text.trim(),
+        // Demo mode - just delay and navigate
+        await Future<void>.delayed(const Duration(seconds: 1));
+        
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute<void>(builder: (context) => const MainNavigation()),
           );
-
-          // Navigate to dashboard on success
-          if (mounted) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const MainNavigation()),
-            );
-          }
-        } else {
-          // Firebase not available - navigate to dashboard anyway for demo
-          await Future.delayed(const Duration(seconds: 1));
-          if (mounted) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const MainNavigation()),
-            );
-          }
         }
       } catch (e) {
         // Handle login errors
@@ -110,33 +96,14 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      if (_googleSignIn != null && _auth != null) {
-        // Google Sign In
-        final GoogleSignInAccount? googleUser = await _googleSignIn!.signIn();
-        if (googleUser != null) {
-          final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-          final credential = GoogleAuthProvider.credential(
-            accessToken: googleAuth.accessToken,
-            idToken: googleAuth.idToken,
-          );
-          await _auth!.signInWithCredential(credential);
-
-          if (mounted) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const MainNavigation()),
-            );
-          }
-        }
-      } else {
-        // Firebase not available - navigate to dashboard anyway for demo
-        await Future.delayed(const Duration(seconds: 1));
-        if (mounted) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const MainNavigation()),
-          );
-        }
+      // Demo mode - just delay and navigate
+      await Future<void>.delayed(const Duration(seconds: 1));
+      
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute<void>(builder: (context) => const MainNavigation()),
+        );
       }
     } catch (e) {
       if (mounted) {
@@ -190,7 +157,7 @@ class _LoginScreenState extends State<LoginScreen> {
     // Navigate to sign up screen
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const SignupScreen()),
+      MaterialPageRoute<void>(builder: (context) => const SignupScreen()),
     );
   }
 
@@ -304,8 +271,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 8),
                     TextFormField(
                       controller: _emailController,
-                      keyboardType: TextInputType.emailAddress,
-                      textInputAction: TextInputAction.next,
                       decoration: InputDecoration(
                         hintText: 'Enter your email',
                         hintStyle: const TextStyle(
@@ -382,7 +347,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     TextFormField(
                       controller: _passwordController,
                       obscureText: !_isPasswordVisible,
-                      textInputAction: TextInputAction.done,
                       onFieldSubmitted: (_) => _login(),
                       decoration: InputDecoration(
                         hintText: 'Enter your password',
@@ -555,7 +519,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     Expanded(
                       child: _buildSocialButton(
                         onPressed: _handleGoogleSignIn,
-                        icon: FontAwesomeIcons.google,
+                        icon: Icons.g_mobiledata,
                         color: const Color(0xFF4285F4),
                         label: 'Google',
                       ),
@@ -566,7 +530,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     Expanded(
                       child: _buildSocialButton(
                         onPressed: _facebookSignIn,
-                        icon: FontAwesomeIcons.facebookF,
+                        icon: Icons.facebook,
                         color: const Color(0xFF1877F2),
                         label: 'Facebook',
                       ),
@@ -577,7 +541,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     Expanded(
                       child: _buildSocialButton(
                         onPressed: _appleSignIn,
-                        icon: FontAwesomeIcons.apple,
+                        icon: Icons.apple,
                         color: const Color(0xFF000000),
                         label: 'Apple',
                       ),
@@ -597,9 +561,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     TextButton(
                       onPressed: _signUp,
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                      ),
                       child: const Text(
                         'Sign up',
                         style: TextStyle(
@@ -641,7 +602,7 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            FaIcon(icon, color: color, size: 20),
+            Icon(icon, color: color, size: 20),
             const SizedBox(height: 4),
             Text(
               label,

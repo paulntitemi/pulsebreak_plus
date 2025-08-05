@@ -1,6 +1,5 @@
-// lib/features/onboarding/widgets/animated_background.dart
 import 'package:flutter/material.dart';
-import '../../../core/constants/app_colors.dart';
+import '../../core/constants/app_colors.dart';
 
 class AnimatedBackground extends StatefulWidget {
   const AnimatedBackground({super.key});

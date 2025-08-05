@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+enum AppTheme { light, dark, system }
 
 class ThemeService extends ChangeNotifier {
   static final ThemeService _instance = ThemeService._internal();
@@ -6,27 +9,78 @@ class ThemeService extends ChangeNotifier {
   ThemeService._internal();
 
   static ThemeService get instance => _instance;
+  
+  static const String _themeKey = 'app_theme';
 
   ThemeMode _themeMode = ThemeMode.system;
-  String _selectedTheme = 'System';
+  AppTheme _selectedTheme = AppTheme.system;
 
   ThemeMode get themeMode => _themeMode;
-  String get selectedTheme => _selectedTheme;
+  AppTheme get selectedTheme => _selectedTheme;
+  String get selectedThemeString => _selectedTheme.name;
 
-  void setTheme(String theme) {
-    _selectedTheme = theme;
-    switch (theme) {
-      case 'Light':
-        _themeMode = ThemeMode.light;
-        break;
-      case 'Dark':
-        _themeMode = ThemeMode.dark;
-        break;
-      case 'System':
-        _themeMode = ThemeMode.system;
-        break;
+  Future<void> initialize() async {
+    await _loadThemeFromPreferences();
+  }
+
+  Future<void> _loadThemeFromPreferences() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final themeString = prefs.getString(_themeKey) ?? 'system';
+      final theme = AppTheme.values.firstWhere(
+        (e) => e.name == themeString,
+        orElse: () => AppTheme.system,
+      );
+      await setTheme(theme);
+    } catch (e) {
+      debugPrint('Error loading theme from preferences: $e');
+      // Fallback to system theme
+      _selectedTheme = AppTheme.system;
+      _themeMode = ThemeMode.system;
     }
+  }
+
+  Future<void> setTheme(AppTheme theme) async {
+    _selectedTheme = theme;
+    _themeMode = _getThemeModeFromAppTheme(theme);
+    
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_themeKey, theme.name);
+    } catch (e) {
+      debugPrint('Error saving theme to preferences: $e');
+    }
+    
     notifyListeners();
+  }
+
+  // Legacy method for backward compatibility
+  Future<void> setThemeByString(String theme) async {
+    final appTheme = _getAppThemeFromString(theme);
+    await setTheme(appTheme);
+  }
+
+  ThemeMode _getThemeModeFromAppTheme(AppTheme theme) {
+    switch (theme) {
+      case AppTheme.light:
+        return ThemeMode.light;
+      case AppTheme.dark:
+        return ThemeMode.dark;
+      case AppTheme.system:
+        return ThemeMode.system;
+    }
+  }
+
+  AppTheme _getAppThemeFromString(String theme) {
+    switch (theme.toLowerCase()) {
+      case 'light':
+        return AppTheme.light;
+      case 'dark':
+        return AppTheme.dark;
+      case 'system':
+      default:
+        return AppTheme.system;
+    }
   }
 
   static ThemeData get lightTheme {

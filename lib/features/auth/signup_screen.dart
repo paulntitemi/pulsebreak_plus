@@ -59,7 +59,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
       try {
         // Simulate signup for demo
-        await Future.delayed(const Duration(seconds: 1));
+        await Future<void>.delayed(const Duration(seconds: 1));
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -372,7 +372,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const Text(
-                      "Already have an account? ",
+                      'Already have an account? ',
                       style: TextStyle(color: Color(0xFF6B7280), fontSize: 14),
                     ),
                     TextButton(

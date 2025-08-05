@@ -178,10 +178,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
         icon: Icons.palette_outlined,
         title: 'Theme',
         subtitle: 'Choose your preferred theme',
-        value: _themeService.selectedTheme,
+        value: _themeService.selectedTheme.name,
         options: _themes,
         onChanged: (value) {
-          _themeService.setTheme(value!);
+          final themeEnum = AppTheme.values.firstWhere(
+            (theme) => theme.name == value!,
+            orElse: () => AppTheme.system,
+          );
+          _themeService.setTheme(themeEnum);
           setState(() {});
         },
       ),
@@ -192,7 +196,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         value: _settingsService.selectedLanguage,
         options: _languages,
         onChanged: (value) {
-          _settingsService.setLanguage(value!);
+          _settingsService.setLanguage(value! as String);
           setState(() {});
         },
       ),
@@ -202,7 +206,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         subtitle: 'Switch to dark theme',
         value: _themeService.themeMode == ThemeMode.dark,
         onChanged: (value) {
-          _themeService.setTheme(value ? 'Dark' : 'Light');
+          _themeService.setTheme(value ? AppTheme.dark : AppTheme.light);
           setState(() {});
         },
       ),
