@@ -1,5 +1,13 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../services/messaging_service.dart';
+import '../../services/user_service.dart';
+import '../../services/auth_service.dart';
+import '../../models/user_model.dart';
+import '../../models/message_model.dart';
+import '../../models/chat_model.dart';
 import '../messaging/chat_screen.dart';
 import '../messaging/chat_list_screen.dart';
 
@@ -107,6 +115,9 @@ class _CommunityScreenState extends State<CommunityScreen>
 
   // Track double-tap like animations
   final Map<String, bool> _showLikeAnimation = <String, bool>{};
+  
+  // Cache for chat IDs to avoid repeated Firebase lookups
+  final Map<String, String> _chatIdCache = {};
 
   // Track custom emoji for mood selection (replaces the 8th emoji)
   String _customMoodEmoji = '🤔';
@@ -1229,17 +1240,86 @@ class _CommunityScreenState extends State<CommunityScreen>
   }
 
   Future<void> _messageUser(CommunityUser user) async {
+    // Check cache first
+    String? chatId = _chatIdCache[user.id];
+    
+    if (chatId != null) {
+      // Use cached chat ID - much faster!
+      final chat = Chat(
+        id: chatId,
+        name: user.name,
+        participantIds: [user.id],
+        participantNames: {user.id: user.name},
+        createdAt: DateTime.now(),
+        type: ChatType.direct,
+        unreadCounts: <String, int>{},
+        avatarUrl: user.avatar,
+      );
+      
+      Navigator.push(
+        context,
+        MaterialPageRoute<void>(
+          builder: (context) => ChatScreen(chat: chat),
+        ),
+      );
+      return;
+    }
+    
+    // Show loading state for first-time chats
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: Card(
+          child: Padding(
+            padding: EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(color: Color(0xFF8B5CF6)),
+                SizedBox(height: 16),
+                Text('Opening chat...'),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
     final messagingService = MessagingService.instance;
     
     try {
-      final chatId = await messagingService.createOrGetDirectChat(
+      // Add timeout to prevent hanging
+      chatId = await messagingService.createOrGetDirectChat(
         user.id,
         user.name,
+      ).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          throw Exception('Chat creation timed out');
+        },
       );
       
       if (chatId != null && mounted) {
-        final chat = await messagingService.getChatById(chatId);
-        if (chat != null && mounted) {
+        // Cache the chat ID for future use
+        _chatIdCache[user.id] = chatId;
+        
+        // Dismiss loading dialog
+        Navigator.pop(context);
+        
+        // Create chat object
+        final chat = Chat(
+          id: chatId,
+          name: user.name,
+          participantIds: [user.id],
+          participantNames: {user.id: user.name},
+          createdAt: DateTime.now(),
+          type: ChatType.direct,
+          unreadCounts: <String, int>{},
+          avatarUrl: user.avatar,
+        );
+        
+        if (mounted) {
           Navigator.push(
             context,
             MaterialPageRoute<void>(
@@ -1247,14 +1327,20 @@ class _CommunityScreenState extends State<CommunityScreen>
             ),
           );
         }
+      } else {
+        if (mounted) Navigator.pop(context);
+        throw Exception('Failed to create chat');
       }
     } catch (e) {
       debugPrint('Error starting chat with user: $e');
       if (mounted) {
+        Navigator.pop(context); // Dismiss loading dialog
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Unable to start chat. Please try again.'),
-            backgroundColor: Color(0xFFEF4444),
+          SnackBar(
+            content: Text(e.toString().contains('timed out') 
+                ? 'Chat is taking longer than expected. Please try again.'
+                : 'Unable to start chat. Please try again.'),
+            backgroundColor: const Color(0xFFEF4444),
           ),
         );
       }
@@ -1416,8 +1502,14 @@ class _CommunityScreenState extends State<CommunityScreen>
           IconButton(
             icon: const Icon(Icons.search, color: Color(0xFF6B7280)),
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Search friends coming soon!')),
+              Navigator.push(
+                context,
+                MaterialPageRoute<void>(
+                  builder: (context) => _SearchFriendsListScreen(
+                    friends: _friends,
+                    onMessageUser: _messageUser,
+                  ),
+                ),
               );
             },
           ),
@@ -1756,14 +1848,7 @@ class _CommunityScreenState extends State<CommunityScreen>
                     ),
                     const SizedBox(width: 24),
                     GestureDetector(
-                      onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Share functionality coming soon!'),
-                            backgroundColor: Color(0xFF8B5CF6),
-                          ),
-                        );
-                      },
+                      onTap: () => _showShareDialog(context, post),
                       child: Transform.rotate(
                         angle: -0.52, // ~30 degrees to 2 o'clock position
                         child: const Icon(
@@ -2300,6 +2385,154 @@ class _CommunityScreenState extends State<CommunityScreen>
     );
   }
 
+  void _shareToSocialPlatforms(BuildContext context, CommunityPost post) async {
+    // Close the share dialog immediately for better UX
+    Navigator.pop(context);
+    
+    // Show loading indicator while preparing share
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Row(
+            children: [
+              SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+              ),
+              SizedBox(width: 12),
+              Text('Preparing to share...'),
+            ],
+          ),
+          duration: Duration(seconds: 2),
+          backgroundColor: Color(0xFF8B5CF6),
+        ),
+      );
+    }
+
+    try {
+      // Pre-format the text to avoid computation delay
+      final String shareText = _buildShareText(post);
+
+      // Share using the native sharing dialog with timeout
+      await Future.any([
+        Share.share(
+          shareText,
+          subject: 'Wellness Update from ${post.userName}',
+        ),
+        Future<void>.delayed(const Duration(seconds: 5)), // 5 second timeout
+      ]);
+      
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to share post'),
+            backgroundColor: Color(0xFFEF4444),
+          ),
+        );
+      }
+    }
+  }
+
+  void _createStoryImage(BuildContext context, CommunityPost post) {
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Create Story Image'),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.photo_library,
+              size: 64,
+              color: Color(0xFF8B5CF6),
+            ),
+            SizedBox(height: 16),
+            Text(
+              'Story image creation will generate a beautiful visual card with your wellness update, perfect for sharing on social media stories.',
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 16),
+            Text(
+              'Coming soon in a future update!',
+              style: TextStyle(
+                fontStyle: FontStyle.italic,
+                color: Color(0xFF6B7280),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Got it'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF8B5CF6),
+            ),
+            child: const Text('Notify me', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _saveAsScreenshot(BuildContext context, CommunityPost post) {
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Save as Screenshot'),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.save_alt,
+              size: 64,
+              color: Color(0xFF10B981),
+            ),
+            SizedBox(height: 16),
+            Text(
+              'This feature will capture your wellness post as a beautiful image and save it to your device gallery.',
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 16),
+            Text(
+              'Screenshot functionality coming soon!',
+              style: TextStyle(
+                fontStyle: FontStyle.italic,
+                color: Color(0xFF6B7280),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Screenshot saved to gallery! (Demo)'),
+                  backgroundColor: Color(0xFF10B981),
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF10B981),
+            ),
+            child: const Text('Save Demo', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
   String _formatTimestamp(DateTime timestamp) {
     final now = DateTime.now();
     final difference = now.difference(timestamp);
@@ -2311,6 +2544,1078 @@ class _CommunityScreenState extends State<CommunityScreen>
     } else {
       return '${difference.inDays}d ago';
     }
+  }
+
+  // Cache for pre-built share texts to avoid repeated computation
+  final Map<String, String> _shareTextCache = {};
+  
+  String _buildShareText(CommunityPost post) {
+    // Use post ID as cache key
+    final cacheKey = '${post.userName}_${post.timestamp.millisecondsSinceEpoch}';
+    
+    if (_shareTextCache.containsKey(cacheKey)) {
+      return _shareTextCache[cacheKey]!;
+    }
+    
+    final String shareText = '''
+🌟 ${post.userName} shared from PulseBreak+
+
+${post.content}
+
+${post.achievement.isNotEmpty ? '🏆 ${post.achievement}' : ''}
+
+❤️ ${post.likes} likes • 💬 ${post.comments.length} comments
+⏰ ${_formatTimestamp(post.timestamp)}
+
+#WellnessJourney #MentalHealth #SelfCare
+''';
+    
+    // Cache the result for 5 minutes
+    _shareTextCache[cacheKey] = shareText;
+    Timer(const Duration(minutes: 5), () => _shareTextCache.remove(cacheKey));
+    
+    return shareText;
+  }
+
+  void _showShareDialog(BuildContext context, CommunityPost post) {
+    debugPrint('🔄 Opening share dialog for post by ${post.userName}');
+    
+    // Pre-cache share text to avoid delays
+    _buildShareText(post);
+    
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      enableDrag: true,
+      isDismissible: true,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Handle bar
+              Container(
+                margin: const EdgeInsets.only(top: 12),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE5E7EB),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+
+              // Header
+              const Padding(
+                padding: EdgeInsets.all(20),
+                child: Text(
+                  'Share Post',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF2E3A59),
+                  ),
+                ),
+              ),
+
+              // Share options
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  children: [
+                    _buildShareOption(
+                      icon: Icons.share,
+                      title: 'Share via Apps',
+                      subtitle: 'Share to messaging apps, social media, etc.',
+                      onTap: () => _shareViaApps(context, post),
+                    ),
+                    const SizedBox(height: 12),
+                    _buildShareOption(
+                      icon: Icons.copy,
+                      title: 'Copy Text',
+                      subtitle: 'Copy post content to clipboard',
+                      onTap: () => _copyToClipboard(context, post),
+                    ),
+                    const SizedBox(height: 12),
+                    _buildShareOption(
+                      icon: Icons.link,
+                      title: 'Copy Link',
+                      subtitle: 'Copy a shareable link to this post',
+                      onTap: () => _copyLink(context, post),
+                    ),
+                    const SizedBox(height: 12),
+                    _buildShareOption(
+                      icon: Icons.message,
+                      title: 'Share with Friends',
+                      subtitle: 'Send directly to your wellness circle',
+                      onTap: () => _shareWithFriends(context, post),
+                    ),
+                    const SizedBox(height: 12),
+                    _buildShareOption(
+                      icon: Icons.share,
+                      title: 'Share via Apps',
+                      subtitle: 'Share through installed social apps',
+                      onTap: () => _shareToSocialPlatforms(context, post),
+                    ),
+                    const SizedBox(height: 12),
+                    _buildShareOption(
+                      icon: Icons.photo_library,
+                      title: 'Create Story Image',
+                      subtitle: 'Generate image for social media stories',
+                      onTap: () => _createStoryImage(context, post),
+                    ),
+                    const SizedBox(height: 12),
+                    _buildShareOption(
+                      icon: Icons.save_alt,
+                      title: 'Save as Screenshot',
+                      subtitle: 'Save post as image to gallery',
+                      onTap: () => _saveAsScreenshot(context, post),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 20),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildShareOption({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFF5F7FA),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: ListTile(
+        leading: Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            color: const Color(0xFF8B5CF6).withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(
+            icon,
+            color: const Color(0xFF8B5CF6),
+            size: 24,
+          ),
+        ),
+        title: Text(
+          title,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF2E3A59),
+          ),
+        ),
+        subtitle: Text(
+          subtitle,
+          style: const TextStyle(
+            fontSize: 14,
+            color: Color(0xFF6B7280),
+          ),
+        ),
+        onTap: onTap,
+        trailing: const Icon(
+          Icons.arrow_forward_ios,
+          size: 16,
+          color: Color(0xFF9CA3AF),
+        ),
+      ),
+    );
+  }
+
+  void _shareViaApps(BuildContext context, CommunityPost post) {
+    Navigator.pop(context);
+    
+    String shareText = '${post.userName} shared: "${post.content}"';
+    
+    if (post.achievement.isNotEmpty) {
+      shareText += '\n🏆 Achievement: ${post.achievement}';
+    }
+    
+    shareText += '\n\nShared from PulseBreak+ Wellness Community 💚';
+    
+    Share.share(
+      shareText,
+      subject: 'Wellness Update from ${post.userName}',
+    );
+  }
+
+  void _copyToClipboard(BuildContext context, CommunityPost post) {
+    Navigator.pop(context);
+    
+    String copyText = '${post.userName}: "${post.content}"';
+    
+    if (post.achievement.isNotEmpty) {
+      copyText += '\n🏆 ${post.achievement}';
+    }
+    
+    Clipboard.setData(ClipboardData(text: copyText));
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Post copied to clipboard!'),
+        backgroundColor: Color(0xFF10B981),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
+  void _copyLink(BuildContext context, CommunityPost post) {
+    Navigator.pop(context);
+    
+    // Generate a mock shareable link (in a real app, this would be a deep link)
+    final link = 'https://pulsebreakplus.com/post/${post.id}';
+    
+    Clipboard.setData(ClipboardData(text: link));
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Post link copied to clipboard!'),
+        backgroundColor: Color(0xFF10B981),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
+  void _shareWithFriends(BuildContext context, CommunityPost post) {
+    debugPrint('👥 Opening share with friends for post by ${post.userName}');
+    Navigator.pop(context);
+    
+    // Show loading indicator briefly
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Loading friends list...'),
+        duration: Duration(milliseconds: 500),
+        backgroundColor: Color(0xFF8B5CF6),
+      ),
+    );
+    
+    // Show friends list to share with
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.7,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              // Handle bar
+              Container(
+                margin: const EdgeInsets.only(top: 12),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE5E7EB),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+
+              // Header
+              const Padding(
+                padding: EdgeInsets.all(20),
+                child: Text(
+                  'Share with Friends',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF2E3A59),
+                  ),
+                ),
+              ),
+
+              // Friends list
+              Expanded(
+                child: ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  itemCount: _friends.length,
+                  itemBuilder: (context, index) {
+                    final friend = _friends[index];
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF5F7FA),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: ListTile(
+                        leading: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFF3F4F6),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: Text(
+                              friend.avatar,
+                              style: const TextStyle(fontSize: 18),
+                            ),
+                          ),
+                        ),
+                        title: Text(
+                          friend.name,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF2E3A59),
+                          ),
+                        ),
+                        subtitle: Text(
+                          friend.isOnline ? 'Online' : friend.lastActivity,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: friend.isOnline 
+                                ? const Color(0xFF10B981) 
+                                : const Color(0xFF6B7280),
+                          ),
+                        ),
+                        trailing: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF8B5CF6),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: const Text(
+                            'Send',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        onTap: () => _showMessageInputDialog(context, post, friend),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showMessageInputDialog(BuildContext context, CommunityPost post, CommunityUser friend) {
+    Navigator.pop(context); // Close the friends list
+    
+    final TextEditingController messageController = TextEditingController();
+    
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Share with ${friend.name}'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Add a personal message (optional):',
+              style: TextStyle(
+                fontSize: 14,
+                color: Color(0xFF6B7280),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: messageController,
+              maxLines: 3,
+              maxLength: 200,
+              decoration: InputDecoration(
+                hintText: 'Hey ${friend.name.split(' ').first}, check this out!',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Color(0xFFE5E7EB)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Color(0xFF8B5CF6), width: 2),
+                ),
+                contentPadding: EdgeInsets.all(12),
+                hintStyle: TextStyle(color: Color(0xFF9CA3AF)),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF5F7FA),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Color(0xFFE5E7EB)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Post Preview:',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF6B7280),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '👤 ${post.userName}',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                  Text(
+                    '💬 "${post.content}"',
+                    style: TextStyle(fontSize: 12),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (post.achievement.isNotEmpty)
+                    Text(
+                      '🏆 ${post.achievement}',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _sendPostToFriend(context, post, friend, messageController.text.trim());
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF8B5CF6),
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Send'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _sendPostToFriend(BuildContext context, CommunityPost post, CommunityUser friend, [String? personalMessage]) async {
+    debugPrint('🚀 Starting to share post with ${friend.name} (ID: ${friend.id})');
+    
+    try {
+      // Check if this is a mock friend (ID is just a number like "1", "2", etc.)
+      // For demo purposes, we'll simulate the chat functionality
+      if (friend.id.length <= 2 && int.tryParse(friend.id) != null) {
+        debugPrint('🎭 Detected mock friend, simulating share functionality...');
+        
+        // Simulate a delay for realistic feel
+        await Future<void>.delayed(const Duration(milliseconds: 500));
+        
+        // Show success message for demo
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Post shared with ${friend.name}! (Demo Mode)'),
+              backgroundColor: const Color(0xFF10B981),
+              action: SnackBarAction(
+                label: 'View Demo',
+                textColor: Colors.white,
+                onPressed: () {
+                  // Show a demo message
+                  _showDemoSharedMessage(context, post, friend, personalMessage);
+                },
+              ),
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
+        return;
+      }
+
+      // For real Firebase users, use the actual messaging service
+      debugPrint('📞 Creating/getting chat with real Firebase user...');
+      final chatId = await MessagingService.instance.createOrGetDirectChat(
+        friend.id,
+        friend.name,
+      ).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          debugPrint('⏰ Chat creation timed out');
+          return null;
+        },
+      );
+      
+      debugPrint('💬 Chat ID: $chatId');
+      
+      if (chatId == null) {
+        throw Exception('Could not create chat - possibly a connection issue');
+      }
+
+      // Format the post content as a message
+      String sharedPostMessage = '';
+      
+      // Add personal message if provided
+      if (personalMessage != null && personalMessage.isNotEmpty) {
+        sharedPostMessage += '💭 $personalMessage\n\n';
+      }
+      
+      sharedPostMessage += '📢 Shared from Community Feed:\n\n';
+      sharedPostMessage += '👤 ${post.userName}\n';
+      sharedPostMessage += '💬 "${post.content}"\n';
+      
+      if (post.achievement.isNotEmpty) {
+        sharedPostMessage += '🏆 ${post.achievement}\n';
+      }
+      
+      sharedPostMessage += '\n❤️ ${post.likes} likes • 💬 ${post.comments} comments';
+      sharedPostMessage += '\n⏰ ${_formatTimestamp(post.timestamp)}';
+
+      debugPrint('📝 Formatted message: $sharedPostMessage');
+
+      // Send the formatted post as a message
+      debugPrint('📨 Sending message to chat...');
+      final success = await MessagingService.instance.sendMessage(
+        chatId: chatId,
+        content: sharedPostMessage,
+        type: MessageType.text,
+      );
+
+      debugPrint('✅ Message sent successfully: $success');
+
+      if (success) {
+        // Show success message and navigate to chat
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Post shared with ${friend.name}!'),
+              backgroundColor: const Color(0xFF10B981),
+              action: SnackBarAction(
+                label: 'View Chat',
+                textColor: Colors.white,
+                onPressed: () => _messageUser(friend),
+              ),
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
+      } else {
+        throw Exception('Failed to send message');
+      }
+    } catch (e) {
+      debugPrint('Error sharing post with friend: $e');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to share post with ${friend.name}'),
+            backgroundColor: const Color(0xFFEF4444),
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
+  void _showDemoSharedMessage(BuildContext context, CommunityPost post, CommunityUser friend, [String? personalMessage]) {
+    // Format the post as it would appear in chat
+    String sharedPostMessage = '';
+    
+    // Add personal message if provided
+    if (personalMessage != null && personalMessage.isNotEmpty) {
+      sharedPostMessage += '💭 $personalMessage\n\n';
+    }
+    
+    sharedPostMessage += '📢 Shared from Community Feed:\n\n';
+    sharedPostMessage += '👤 ${post.userName}\n';
+    sharedPostMessage += '💬 "${post.content}"\n';
+    
+    if (post.achievement.isNotEmpty) {
+      sharedPostMessage += '🏆 ${post.achievement}\n';
+    }
+    
+    sharedPostMessage += '\n❤️ ${post.likes} likes • 💬 ${post.comments} comments';
+    sharedPostMessage += '\n⏰ ${_formatTimestamp(post.timestamp)}';
+
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Demo: Chat with ${friend.name}'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'This is how the post would appear in your chat:',
+              style: TextStyle(
+                fontSize: 14,
+                color: Color(0xFF6B7280),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF5F7FA),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: const Color(0xFFE5E7EB),
+                ),
+              ),
+              child: Text(
+                sharedPostMessage,
+                style: const TextStyle(fontSize: 14),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              '💡 This is a demo since we\'re using mock friends. With real Firebase users, this would appear in the actual chat.',
+              style: TextStyle(
+                fontSize: 12,
+                color: Color(0xFF8B5CF6),
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Got it!'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SearchFriendsListScreen extends StatefulWidget {
+  final List<CommunityUser> friends;
+  final Function(CommunityUser) onMessageUser;
+
+  const _SearchFriendsListScreen({
+    required this.friends,
+    required this.onMessageUser,
+  });
+
+  @override
+  State<_SearchFriendsListScreen> createState() => _SearchFriendsListScreenState();
+}
+
+class _SearchFriendsListScreenState extends State<_SearchFriendsListScreen> {
+  final TextEditingController _searchController = TextEditingController();
+  List<CommunityUser> _filteredFriends = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _filteredFriends = widget.friends;
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _filterFriends(String query) {
+    setState(() {
+      if (query.isEmpty) {
+        _filteredFriends = widget.friends;
+      } else {
+        _filteredFriends = widget.friends
+            .where(
+              (friend) =>
+                  friend.name.toLowerCase().contains(query.toLowerCase()) ||
+                  friend.achievements.any(
+                    (achievement) => achievement.toLowerCase().contains(
+                      query.toLowerCase(),
+                    ),
+                  ),
+            )
+            .toList();
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF5F7FA),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF2E3A59)),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text(
+          'Search Friends',
+          style: TextStyle(
+            color: Color(0xFF2E3A59),
+            fontSize: 24,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        centerTitle: false,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            // Friends summary
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFFE8F4F8), Color(0xFFF0F9FF)],
+                ),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Your Wellness Circle',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF2E3A59),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          '${widget.friends.length} friends • ${widget.friends.where((f) => f.isOnline).length} online',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Color(0xFF6B7280),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF8B5CF6).withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.people,
+                      color: Color(0xFF8B5CF6),
+                      size: 24,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            // Search Bar
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: TextField(
+                controller: _searchController,
+                onChanged: _filterFriends,
+                autofocus: true,
+                decoration: const InputDecoration(
+                  hintText: 'Search your friends by name or achievements...',
+                  border: InputBorder.none,
+                  icon: Icon(Icons.search, color: Color(0xFF8B5CF6)),
+                  hintStyle: TextStyle(color: Color(0xFF9CA3AF)),
+                ),
+                style: const TextStyle(color: Color(0xFF2E3A59), fontSize: 16),
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            // Friends List
+            Expanded(
+              child: _filteredFriends.isEmpty
+                  ? _buildEmptyState()
+                  : ListView.builder(
+                      itemCount: _filteredFriends.length,
+                      itemBuilder: (context, index) => _buildFriendCard(_filteredFriends[index]),
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    if (_searchController.text.isEmpty) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.people_outline,
+              size: 60,
+              color: Color(0xFFE5E7EB),
+            ),
+            SizedBox(height: 16),
+            Text(
+              'No Friends Yet',
+              style: TextStyle(
+                fontSize: 18,
+                color: Color(0xFF6B7280),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              'Add some friends to start building your wellness circle',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: Color(0xFF9CA3AF),
+              ),
+            ),
+          ],
+        ),
+      );
+    } else {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.search_off,
+              size: 60,
+              color: Color(0xFFE5E7EB),
+            ),
+            SizedBox(height: 16),
+            Text(
+              'No friends found',
+              style: TextStyle(
+                fontSize: 18,
+                color: Color(0xFF6B7280),
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              'Try different search terms',
+              style: TextStyle(
+                fontSize: 14,
+                color: Color(0xFF9CA3AF),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
+  Widget _buildFriendCard(CommunityUser friend) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: () => _showProfileExpansion(friend.avatar, friend.name),
+            child: Stack(
+              children: [
+                Container(
+                  width: 50,
+                  height: 50,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFF3F4F6),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Text(
+                      friend.avatar,
+                      style: const TextStyle(fontSize: 20),
+                    ),
+                  ),
+                ),
+                if (friend.isOnline)
+                  Positioned(
+                    bottom: 2,
+                    right: 2,
+                    child: Container(
+                      width: 12,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF10B981),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 2),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      friend.name,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF2E3A59),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      friend.currentMood,
+                      style: const TextStyle(fontSize: 18),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${friend.streakDays} day streak • ${friend.lastActivity}',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF6B7280),
+                  ),
+                ),
+                if (friend.achievements.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 6,
+                    children: friend.achievements
+                        .take(2)
+                        .map(
+                          (achievement) => Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFEAB308).withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              achievement,
+                              style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w500,
+                                color: Color(0xFFEAB308),
+                              ),
+                            ),
+                          ),
+                        )
+                        .toList(),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          GestureDetector(
+            onTap: () => widget.onMessageUser(friend),
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFF8B5CF6).withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.message_outlined,
+                size: 18,
+                color: Color(0xFF8B5CF6),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showProfileExpansion(String avatar, String name) {
+    showDialog<void>(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.8),
+      builder: (context) => GestureDetector(
+        onTap: () => Navigator.pop(context),
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          body: Center(
+            child: GestureDetector(
+              onTap: () {}, // Prevent dialog from closing when tapping the content
+              child: Container(
+                width: 200,
+                height: 200,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF8B5CF6).withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.3),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: Text(
+                    avatar,
+                    style: const TextStyle(fontSize: 80),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 
@@ -2341,6 +3646,8 @@ class _AddFriendsScreenState extends State<_AddFriendsScreen>
   final TextEditingController _searchController = TextEditingController();
   List<PotentialFriend> _filteredFriends = [];
   List<FriendRequest> _currentFriendRequests = [];
+  List<UserModel> _searchResults = [];
+  bool _isSearching = false;
 
   @override
   void initState() {
@@ -2357,26 +3664,66 @@ class _AddFriendsScreenState extends State<_AddFriendsScreen>
     super.dispose();
   }
 
-  void _filterFriends(String query) {
-    setState(() {
-      if (query.isEmpty) {
+  void _filterFriends(String query) async {
+    if (query.isEmpty) {
+      setState(() {
         _filteredFriends = widget.potentialFriends;
-      } else {
-        _filteredFriends =
-            widget.potentialFriends
-                .where(
-                  (friend) =>
-                      friend.name.toLowerCase().contains(query.toLowerCase()) ||
-                      friend.bio.toLowerCase().contains(query.toLowerCase()) ||
-                      friend.commonInterests.any(
-                        (interest) => interest.toLowerCase().contains(
-                          query.toLowerCase(),
-                        ),
-                      ),
-                )
-                .toList();
-      }
+        _searchResults = [];
+        _isSearching = false;
+      });
+      return;
+    }
+
+    setState(() {
+      _isSearching = true;
     });
+
+    try {
+      // First filter local potential friends
+      final localResults = widget.potentialFriends
+          .where(
+            (friend) =>
+                friend.name.toLowerCase().contains(query.toLowerCase()) ||
+                friend.bio.toLowerCase().contains(query.toLowerCase()) ||
+                friend.commonInterests.any(
+                  (interest) => interest.toLowerCase().contains(
+                    query.toLowerCase(),
+                  ),
+                ),
+          )
+          .toList();
+
+      // Then search real users from Firestore
+      final currentUser = AuthService.instance.currentUser;
+      final realUsers = await UserService.instance.searchUsers(
+        query, 
+        excludeUserId: currentUser?.uid,
+      );
+
+      setState(() {
+        _filteredFriends = localResults;
+        _searchResults = realUsers;
+        _isSearching = false;
+      });
+    } catch (e) {
+      debugPrint('Error searching users: $e');
+      setState(() {
+        _filteredFriends = widget.potentialFriends
+            .where(
+              (friend) =>
+                  friend.name.toLowerCase().contains(query.toLowerCase()) ||
+                  friend.bio.toLowerCase().contains(query.toLowerCase()) ||
+                  friend.commonInterests.any(
+                    (interest) => interest.toLowerCase().contains(
+                      query.toLowerCase(),
+                    ),
+                  ),
+            )
+            .toList();
+        _searchResults = [];
+        _isSearching = false;
+      });
+    }
   }
 
   void _handleAcceptRequest(String requestId) {
@@ -2543,43 +3890,67 @@ class _AddFriendsScreenState extends State<_AddFriendsScreen>
 
           // Results
           Expanded(
-            child:
-                _filteredFriends.isEmpty
-                    ? const Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.search_off,
-                            size: 60,
-                            color: Color(0xFFE5E7EB),
+            child: _isSearching
+                ? const Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircularProgressIndicator(
+                          color: Color(0xFF8B5CF6),
+                        ),
+                        SizedBox(height: 16),
+                        Text(
+                          'Searching for users...',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Color(0xFF6B7280),
                           ),
-                          SizedBox(height: 16),
-                          Text(
-                            'No users found',
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: Color(0xFF6B7280),
-                            ),
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            'Try different search terms',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Color(0xFF9CA3AF),
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                    : ListView.builder(
-                      itemCount: _filteredFriends.length,
-                      itemBuilder:
-                          (context, index) => _buildPotentialFriendCard(
-                            _filteredFriends[index],
-                          ),
+                        ),
+                      ],
                     ),
+                  )
+                : (_filteredFriends.isEmpty && _searchResults.isEmpty)
+                    ? const Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.search_off,
+                              size: 60,
+                              color: Color(0xFFE5E7EB),
+                            ),
+                            SizedBox(height: 16),
+                            Text(
+                              'No users found',
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: Color(0xFF6B7280),
+                              ),
+                            ),
+                            SizedBox(height: 8),
+                            Text(
+                              'Try different search terms',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Color(0xFF9CA3AF),
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : ListView.builder(
+                        itemCount: _filteredFriends.length + _searchResults.length,
+                        itemBuilder: (context, index) {
+                          if (index < _searchResults.length) {
+                            return _buildRealUserCard(_searchResults[index]);
+                          } else {
+                            final friendIndex = index - _searchResults.length;
+                            return _buildPotentialFriendCard(
+                              _filteredFriends[friendIndex],
+                            );
+                          }
+                        },
+                      ),
           ),
         ],
       ),
@@ -2660,6 +4031,264 @@ class _AddFriendsScreenState extends State<_AddFriendsScreen>
         ],
       ),
     );
+  }
+
+  Widget _buildRealUserCard(UserModel user) {
+    final isRequested = widget.sentRequests.contains(user.uid);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xFF8B5CF6).withValues(alpha: 0.2),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Real user badge
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: const Color(0xFF8B5CF6).withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.verified_user,
+                  size: 14,
+                  color: const Color(0xFF8B5CF6),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  'Real User',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF8B5CF6),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          const SizedBox(height: 16),
+
+          // User Header
+          Row(
+            children: [
+              GestureDetector(
+                onTap: () => _showProfileExpansion('👤', user.displayName),
+                child: Hero(
+                  tag: 'real_user_${user.uid}',
+                  child: Container(
+                    width: 60,
+                    height: 60,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF8B5CF6).withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: user.photoURL != null && user.photoURL!.isNotEmpty
+                          ? ClipOval(
+                              child: Image.network(
+                                user.photoURL!,
+                                width: 60,
+                                height: 60,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    const Text('👤', style: TextStyle(fontSize: 28)),
+                              ),
+                            )
+                          : const Text('👤', style: TextStyle(fontSize: 28)),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      user.displayName,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF2E3A59),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      user.isOnline ? 'Online now' : 'Last seen ${_formatLastSeen(user.lastSeen)}',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: user.isOnline ? const Color(0xFF10B981) : const Color(0xFF6B7280),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Add Friend Button
+              ElevatedButton(
+                onPressed: isRequested 
+                    ? null 
+                    : () async {
+                        try {
+                          final currentUser = AuthService.instance.currentUser;
+                          if (currentUser != null) {
+                            await UserService.instance.sendFriendRequest(
+                              fromUserId: currentUser.uid,
+                              toUserId: user.uid,
+                              message: 'Hi! I\'d like to connect and share our wellness journey together.',
+                            );
+                            widget.onSendRequest(user.uid);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Friend request sent!'),
+                                backgroundColor: Color(0xFF10B981),
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Failed to send request: ${e.toString()}'),
+                              backgroundColor: Color(0xFFEF4444),
+                            ),
+                          );
+                        }
+                      },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: isRequested
+                      ? const Color(0xFFE5E7EB)
+                      : const Color(0xFF8B5CF6),
+                  foregroundColor: isRequested 
+                      ? const Color(0xFF6B7280) 
+                      : Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+                child: Text(
+                  isRequested ? 'Requested' : 'Add Friend',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 16),
+
+          // User Stats
+          Row(
+            children: [
+              _buildUserStat('Wellness Score', '${user.wellnessScore}', Icons.trending_up),
+              const SizedBox(width: 24),
+              _buildUserStat(
+                'Interests',
+                '${user.interests.length}',
+                Icons.favorite,
+              ),
+            ],
+          ),
+
+          if (user.interests.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            const Text(
+              'Interests',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF6B7280),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 4,
+              children: user.interests
+                  .take(3)
+                  .map(
+                    (interest) => Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF8B5CF6).withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        interest,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF8B5CF6),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  )
+                  .toList(),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUserStat(String label, String value, IconData icon) {
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: const Color(0xFF8B5CF6)),
+        const SizedBox(width: 4),
+        Text(
+          '$value $label',
+          style: const TextStyle(
+            fontSize: 12,
+            color: Color(0xFF6B7280),
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _formatLastSeen(DateTime lastSeen) {
+    final now = DateTime.now();
+    final difference = now.difference(lastSeen);
+
+    if (difference.inMinutes < 1) {
+      return 'just now';
+    } else if (difference.inHours < 1) {
+      return '${difference.inMinutes}m ago';
+    } else if (difference.inDays < 1) {
+      return '${difference.inHours}h ago';
+    } else if (difference.inDays < 7) {
+      return '${difference.inDays}d ago';
+    } else {
+      return '${lastSeen.day}/${lastSeen.month}/${lastSeen.year}';
+    }
   }
 
   Widget _buildPotentialFriendCard(PotentialFriend friend) {

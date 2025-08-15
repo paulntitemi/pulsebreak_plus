@@ -22,6 +22,8 @@ class SettingsService extends ChangeNotifier {
   static const String _userNameKey = 'user_name';
   static const String _userEmailKey = 'user_email';
   static const String _userLocationKey = 'user_location';
+  static const String _userBirthdayKey = 'user_birthday';
+  static const String _userGenderKey = 'user_gender';
 
   // Settings state
   bool _pushNotifications = true;
@@ -39,6 +41,8 @@ class SettingsService extends ChangeNotifier {
   String _userName = 'Paul Nti';
   String _userEmail = 'paul.nti@example.com';
   String _userLocation = 'Accra, Ghana';
+  DateTime? _userBirthday;
+  String _userGender = 'Prefer not to say';
 
   // Getters
   bool get pushNotifications => _pushNotifications;
@@ -54,6 +58,8 @@ class SettingsService extends ChangeNotifier {
   String get userName => _userName;
   String get userEmail => _userEmail;
   String get userLocation => _userLocation;
+  DateTime? get userBirthday => _userBirthday;
+  String get userGender => _userGender;
 
   // Initialize settings from SharedPreferences
   Future<void> initialize() async {
@@ -77,6 +83,12 @@ class SettingsService extends ChangeNotifier {
       _userName = prefs.getString(_userNameKey) ?? 'Paul Nti';
       _userEmail = prefs.getString(_userEmailKey) ?? 'paul.nti@example.com';
       _userLocation = prefs.getString(_userLocationKey) ?? 'Accra, Ghana';
+      
+      final birthdayString = prefs.getString(_userBirthdayKey);
+      if (birthdayString != null) {
+        _userBirthday = DateTime.tryParse(birthdayString);
+      }
+      _userGender = prefs.getString(_userGenderKey) ?? 'Prefer not to say';
       
       notifyListeners();
     } catch (e) {
@@ -145,7 +157,13 @@ class SettingsService extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> updateUserProfile({String? name, String? email, String? location}) async {
+  Future<void> updateUserProfile({
+    String? name,
+    String? email,
+    String? location,
+    DateTime? birthday,
+    String? gender,
+  }) async {
     if (name != null) {
       _userName = name;
       await _saveStringSetting(_userNameKey, name);
@@ -157,6 +175,14 @@ class SettingsService extends ChangeNotifier {
     if (location != null) {
       _userLocation = location;
       await _saveStringSetting(_userLocationKey, location);
+    }
+    if (birthday != null) {
+      _userBirthday = birthday;
+      await _saveStringSetting(_userBirthdayKey, birthday.toIso8601String());
+    }
+    if (gender != null) {
+      _userGender = gender;
+      await _saveStringSetting(_userGenderKey, gender);
     }
     notifyListeners();
   }

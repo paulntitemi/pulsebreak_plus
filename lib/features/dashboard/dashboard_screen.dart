@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pulsebreak_plus/features/ai_coach/ai_chat_screen.dart';
 import 'package:pulsebreak_plus/services/auth_service.dart';
 import 'package:pulsebreak_plus/services/user_service.dart';
+import 'package:pulsebreak_plus/shared/widgets/date_selector.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -198,6 +199,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                       ),
                     ],
+                  ),
+                  
+                  const SizedBox(height: 20),
+                  
+                  // Date Selector Carousel
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: const DateSelector(),
                   ),
                   
                   const SizedBox(height: 30),

@@ -78,10 +78,16 @@ class _ProfilePictureWidgetState extends State<ProfilePictureWidget> {
           widget.onImageUpdated?.call(downloadUrl);
           
           if (mounted) {
+            final isDemo = downloadUrl.contains('demo-profile-image');
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Profile picture updated successfully!'),
-                backgroundColor: Color(0xFF10B981),
+              SnackBar(
+                content: Text(
+                  isDemo 
+                      ? 'Profile picture updated successfully! (Demo mode - Firebase Storage not configured)'
+                      : 'Profile picture updated successfully!'
+                ),
+                backgroundColor: const Color(0xFF10B981),
+                duration: Duration(seconds: isDemo ? 4 : 3),
               ),
             );
           }
@@ -90,8 +96,9 @@ class _ProfilePictureWidgetState extends State<ProfilePictureWidget> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Failed to upload image. Please try again.'),
-              backgroundColor: Color(0xFFEF4444),
+              content: Text('Upload failed. Using demo mode instead.'),
+              backgroundColor: Color(0xFFFF9500),
+              duration: Duration(seconds: 4),
             ),
           );
         }
@@ -100,8 +107,9 @@ class _ProfilePictureWidgetState extends State<ProfilePictureWidget> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('An error occurred. Please try again.'),
-            backgroundColor: Color(0xFFEF4444),
+            content: Text('Upload failed. Using demo mode for now. Check your internet connection.'),
+            backgroundColor: Color(0xFFFF9500),
+            duration: Duration(seconds: 4),
           ),
         );
       }
@@ -155,28 +163,30 @@ class _ProfilePictureWidgetState extends State<ProfilePictureWidget> {
                   )
                 : _currentImageUrl != null
                     ? ClipOval(
-                        child: Image.network(
-                          _currentImageUrl!,
-                          width: widget.size,
-                          height: widget.size,
-                          fit: BoxFit.cover,
-                          loadingBuilder: (context, child, loadingProgress) {
-                            if (loadingProgress == null) return child;
-                            return Center(
-                              child: CircularProgressIndicator(
-                                value: loadingProgress.expectedTotalBytes != null
-                                    ? loadingProgress.cumulativeBytesLoaded /
-                                        loadingProgress.expectedTotalBytes!
-                                    : null,
-                                color: Colors.white,
-                                strokeWidth: 2,
+                        child: _currentImageUrl!.contains('demo-profile-image')
+                            ? _buildDemoAvatar()
+                            : Image.network(
+                                _currentImageUrl!,
+                                width: widget.size,
+                                height: widget.size,
+                                fit: BoxFit.cover,
+                                loadingBuilder: (context, child, loadingProgress) {
+                                  if (loadingProgress == null) return child;
+                                  return Center(
+                                    child: CircularProgressIndicator(
+                                      value: loadingProgress.expectedTotalBytes != null
+                                          ? loadingProgress.cumulativeBytesLoaded /
+                                              loadingProgress.expectedTotalBytes!
+                                          : null,
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
+                                  );
+                                },
+                                errorBuilder: (context, error, stackTrace) {
+                                  return _buildDefaultAvatar();
+                                },
                               ),
-                            );
-                          },
-                          errorBuilder: (context, error, stackTrace) {
-                            return _buildDefaultAvatar();
-                          },
-                        ),
                       )
                     : _buildDefaultAvatar(),
           ),
@@ -220,6 +230,45 @@ class _ProfilePictureWidgetState extends State<ProfilePictureWidget> {
       Icons.person,
       color: Colors.white,
       size: widget.size * 0.5,
+    );
+  }
+
+  Widget _buildDemoAvatar() {
+    return Container(
+      width: widget.size,
+      height: widget.size,
+      decoration: const BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF8B5CF6),
+            Color(0xFF6366F1),
+          ],
+        ),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.check_circle,
+              color: Colors.white,
+              size: widget.size * 0.3,
+            ),
+            if (widget.size > 80)
+              Text(
+                'Demo',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: widget.size * 0.1,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 }

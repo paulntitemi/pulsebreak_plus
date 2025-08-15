@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:pulsebreak_plus/services/settings_service.dart';
+import '../../services/notification_service.dart';
 
 class NotificationSettingsScreen extends StatefulWidget {
   const NotificationSettingsScreen({super.key});
@@ -10,6 +12,7 @@ class NotificationSettingsScreen extends StatefulWidget {
 
 class _NotificationSettingsScreenState extends State<NotificationSettingsScreen> {
   final SettingsService _settings = SettingsService.instance;
+  final NotificationService _notificationService = NotificationService.instance;
 
   // Detailed notification settings
   bool _moodReminders = true;
@@ -382,34 +385,222 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
     }
   }
 
-  void _sendTestNotification() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.notifications, color: Colors.white),
-            SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Test Notification',
+  void _sendTestNotification() async {
+    try {
+      // Send actual local notification
+      await _notificationService.scheduleWellnessReminder(
+        id: 999,
+        title: '🌟 PulseBreak+ Test Notification',
+        body: 'This is how your wellness reminders will appear!',
+        scheduledTime: DateTime.now().add(const Duration(seconds: 1)),
+      );
+
+      // Show enhanced notification banner overlay
+      _showNotificationBanner();
+      
+      // Show success feedback
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Test notification sent! Check your notification panel.',
                     style: TextStyle(fontWeight: FontWeight.w600),
                   ),
-                  Text(
-                    'This is how your notifications will look!',
-                    style: TextStyle(fontSize: 12),
+                ),
+              ],
+            ),
+            backgroundColor: Color(0xFF10B981),
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      // Fallback to visual banner if notification service fails
+      _showNotificationBanner();
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.info, color: Colors.white),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Showing demo notification (enable notifications in system settings)',
+                    style: TextStyle(fontWeight: FontWeight.w600),
                   ),
-                ],
+                ),
+              ],
+            ),
+            backgroundColor: Color(0xFF0EA5E9),
+            duration: Duration(seconds: 4),
+          ),
+        );
+      }
+    }
+  }
+
+  void _showNotificationBanner() {
+    final overlay = Overlay.of(context);
+    late OverlayEntry overlayEntry;
+    
+    overlayEntry = OverlayEntry(
+      builder: (context) => Positioned(
+        top: MediaQuery.of(context).padding.top + 8,
+        left: 8,
+        right: 8,
+        child: SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(0, -1),
+            end: Offset.zero,
+          ).animate(CurvedAnimation(
+            parent: AnimationController(
+              duration: const Duration(milliseconds: 300),
+              vsync: Navigator.of(context),
+            )..forward(),
+            curve: Curves.easeOut,
+          )),
+          child: Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFF1C1C1E), // iOS dark background
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.3),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    // App Icon - iOS style rounded square
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Color(0xFF8B5CF6),
+                            Color(0xFF6366F1),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(8), // iOS app icon radius
+                      ),
+                      child: const Center(
+                        child: Text(
+                          '💜', // Heart emoji as app icon
+                          style: TextStyle(fontSize: 20),
+                        ),
+                      ),
+                    ),
+                    
+                    const SizedBox(width: 12),
+                    
+                    // Notification content
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // App name and time - iOS style
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'PulseBreak+',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              Text(
+                                'now',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Color(0xFF8E8E93), // iOS secondary text color
+                                ),
+                              ),
+                            ],
+                          ),
+                          
+                          SizedBox(height: 2),
+                          
+                          // Notification title
+                          Text(
+                            'Wellness Reminder 🌟',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.white,
+                            ),
+                          ),
+                          
+                          SizedBox(height: 1),
+                          
+                          // Notification body
+                          Text(
+                            'This is how your wellness reminders will appear!',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Color(0xFF8E8E93), // iOS secondary text color
+                              height: 1.2,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    
+                    const SizedBox(width: 8),
+                    
+                    // iOS-style close button
+                    GestureDetector(
+                      onTap: () => overlayEntry.remove(),
+                      child: Container(
+                        width: 24,
+                        height: 24,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF48484A), // iOS tertiary fill
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          CupertinoIcons.xmark,
+                          size: 12,
+                          color: Color(0xFF8E8E93),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ],
+          ),
         ),
-        backgroundColor: Color(0xFF8B5CF6),
-        duration: Duration(seconds: 4),
       ),
     );
+    
+    overlay.insert(overlayEntry);
+    
+    // Auto-remove after 4 seconds (like iOS notifications)
+    Future.delayed(const Duration(seconds: 4), () {
+      if (overlayEntry.mounted) {
+        overlayEntry.remove();
+      }
+    });
   }
 }

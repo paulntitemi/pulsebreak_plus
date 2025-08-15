@@ -6,6 +6,8 @@ import 'package:pulsebreak_plus/services/theme_service.dart';
 import 'package:pulsebreak_plus/services/settings_service.dart';
 import 'package:pulsebreak_plus/services/mood_service.dart';
 import 'package:pulsebreak_plus/services/firebase_service.dart';
+import 'package:pulsebreak_plus/services/notification_service.dart';
+import 'package:pulsebreak_plus/services/user_preferences_service.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -40,9 +42,11 @@ Future<void> _initializeServices() async {
     
     // Initialize all services concurrently
     await Future.wait([
+      UserPreferencesService.instance.initialize(),
       ThemeService.instance.initialize(),
       SettingsService.instance.initialize(),
       MoodService.instance.initialize(),
+      NotificationService.instance.initialize(),
     ]);
     
     debugPrint('All services initialized successfully');

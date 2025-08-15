@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../models/chat_model.dart';
 import '../../models/message_model.dart';
 import '../../services/messaging_service.dart';
@@ -223,24 +224,26 @@ class _ChatScreenState extends State<ChatScreen> {
             children: [
               if (!isMe) const SizedBox(width: 8),
               Flexible(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: isMe ? const Color(0xFF8B5CF6) : Colors.white,
-                    borderRadius: BorderRadius.only(
-                      topLeft: const Radius.circular(20),
-                      topRight: const Radius.circular(20),
-                      bottomLeft: Radius.circular(isMe ? 20 : 4),
-                      bottomRight: Radius.circular(isMe ? 4 : 20),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
+                child: GestureDetector(
+                  onLongPress: () => _showMessageOptions(message, isMe),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: isMe ? const Color(0xFF8B5CF6) : Colors.white,
+                      borderRadius: BorderRadius.only(
+                        topLeft: const Radius.circular(20),
+                        topRight: const Radius.circular(20),
+                        bottomLeft: Radius.circular(isMe ? 20 : 4),
+                        bottomRight: Radius.circular(isMe ? 4 : 20),
                       ),
-                    ],
-                  ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.05),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -264,6 +267,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       ),
                     ],
                   ),
+                ),
                 ),
               ),
               if (isMe) const SizedBox(width: 8),
@@ -429,6 +433,180 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
+  void _showMessageOptions(Message message, bool isMyMessage) {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
+            
+            // Copy message
+            ListTile(
+              leading: const Icon(Icons.copy, color: Color(0xFF8B5CF6)),
+              title: const Text('Copy Message'),
+              onTap: () {
+                Navigator.pop(context);
+                _copyMessage(message);
+              },
+            ),
+            
+            // Reply to message
+            ListTile(
+              leading: const Icon(Icons.reply, color: Color(0xFF10B981)),
+              title: const Text('Reply'),
+              onTap: () {
+                Navigator.pop(context);
+                _replyToMessage(message);
+              },
+            ),
+            
+            // Edit message (only for own messages)
+            if (isMyMessage)
+              ListTile(
+                leading: const Icon(Icons.edit, color: Color(0xFFEAB308)),
+                title: const Text('Edit Message'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _editMessage(message);
+                },
+              ),
+            
+            // Delete message (only for own messages)
+            if (isMyMessage)
+              ListTile(
+                leading: const Icon(Icons.delete, color: Color(0xFFEF4444)),
+                title: const Text('Delete Message'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _deleteMessage(message);
+                },
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _copyMessage(Message message) async {
+    await Clipboard.setData(ClipboardData(text: message.content));
+    
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Message copied to clipboard'),
+          backgroundColor: Color(0xFF10B981),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  void _replyToMessage(Message message) {
+    _messageController.text = '@${message.senderName} ';
+    // Focus on text field
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      FocusScope.of(context).requestFocus(FocusNode());
+    });
+  }
+
+  void _editMessage(Message message) async {
+    final TextEditingController editController = TextEditingController(text: message.content);
+    
+    final newContent = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Edit Message'),
+        content: TextField(
+          controller: editController,
+          decoration: const InputDecoration(
+            hintText: 'Edit your message...',
+            border: OutlineInputBorder(),
+          ),
+          maxLines: null,
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, editController.text.trim()),
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF8B5CF6)),
+            child: const Text('Save', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+    
+    if (newContent != null && newContent.isNotEmpty && newContent != message.content) {
+      final success = await _messagingService.editMessage(
+        widget.chat.id,
+        message.id,
+        newContent,
+      );
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(success ? 'Message edited successfully' : 'Failed to edit message'),
+            backgroundColor: success ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+          ),
+        );
+      }
+    }
+    
+    editController.dispose();
+  }
+
+  void _deleteMessage(Message message) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Message'),
+        content: const Text('Are you sure you want to delete this message? This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFEF4444)),
+            child: const Text('Delete', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+    
+    if (confirm == true) {
+      final success = await _messagingService.deleteMessage(widget.chat.id, message.id);
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(success ? 'Message deleted successfully' : 'Failed to delete message'),
+            backgroundColor: success ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+          ),
+        );
+      }
+    }
+  }
 
   String _formatMessageTime(DateTime time) {
     final now = DateTime.now();

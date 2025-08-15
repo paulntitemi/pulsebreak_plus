@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pulsebreak_plus/services/settings_service.dart';
+import '../../shared/widgets/profile_picture_widget.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -14,6 +15,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   late TextEditingController _emailController;
   late TextEditingController _locationController;
   late TextEditingController _bioController;
+  DateTime? _selectedBirthday;
+  String _selectedGender = 'Prefer not to say';
 
   @override
   void initState() {
@@ -25,6 +28,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _bioController = TextEditingController(
       text: 'Wellness enthusiast on a journey to better mental health. Love mindfulness, journaling, and staying active. Always looking for new ways to improve my daily habits! 🌱',
     );
+    
+    // Initialize birthday and gender from settings or defaults
+    _selectedBirthday = settings.userBirthday ?? DateTime(1990, 3, 15);
+    _selectedGender = settings.userGender;
   }
 
   @override
@@ -77,58 +84,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           child: Column(
             children: [
               // Profile Picture Section
-              Center(
-                child: Stack(
-                  children: [
-                    Container(
-                      width: 120,
-                      height: 120,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: const LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            Color(0xFF4F8A8B),
-                            Color(0xFF188038),
-                          ],
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF4F8A8B).withValues(alpha: 0.3),
-                            blurRadius: 20,
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
-                      ),
-                      child: const Icon(
-                        Icons.person,
-                        color: Colors.white,
-                        size: 60,
-                      ),
-                    ),
-                    Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: GestureDetector(
-                        onTap: _showImagePicker,
-                        child: Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF8B5CF6),
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 2),
-                          ),
-                          child: const Icon(
-                            Icons.camera_alt,
-                            color: Colors.white,
-                            size: 18,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+              const Center(
+                child: ProfilePictureWidget(
+                  size: 120,
+                  isEditable: true,
                 ),
               ),
 
@@ -205,9 +164,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       color: Color(0xFF2E3A59),
                     ),
                   ),
-                  subtitle: const Text(
-                    'March 15, 1990',
-                    style: TextStyle(
+                  subtitle: Text(
+                    _selectedBirthday != null 
+                        ? _formatBirthday(_selectedBirthday!)
+                        : 'Not set',
+                    style: const TextStyle(
                       fontSize: 14,
                       color: Color(0xFF6B7280),
                     ),
@@ -242,9 +203,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       color: Color(0xFF2E3A59),
                     ),
                   ),
-                  subtitle: const Text(
-                    'Prefer not to say',
-                    style: TextStyle(
+                  subtitle: Text(
+                    _selectedGender,
+                    style: const TextStyle(
                       fontSize: 14,
                       color: Color(0xFF6B7280),
                     ),
@@ -346,6 +307,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         name: _nameController.text,
         email: _emailController.text,
         location: _locationController.text,
+        birthday: _selectedBirthday,
+        gender: _selectedGender,
       );
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -359,92 +322,47 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
   }
 
-  void _showImagePicker() {
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        margin: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              margin: const EdgeInsets.only(top: 12),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: const Color(0xFFE5E7EB),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const Padding(
-              padding: EdgeInsets.all(20),
-              child: Text(
-                'Change Profile Picture',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF2E3A59),
-                ),
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.camera_alt, color: Color(0xFF8B5CF6)),
-              title: const Text('Take Photo'),
-              onTap: () {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Camera feature coming soon!')),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.photo_library, color: Color(0xFF8B5CF6)),
-              title: const Text('Choose from Gallery'),
-              onTap: () {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Gallery feature coming soon!')),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.delete, color: Color(0xFFEF4444)),
-              title: const Text('Remove Photo'),
-              onTap: () {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Photo removed!')),
-                );
-              },
-            ),
-            const SizedBox(height: 16),
-          ],
-        ),
-      ),
-    );
+  String _formatBirthday(DateTime birthday) {
+    const months = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    return '${months[birthday.month - 1]} ${birthday.day}, ${birthday.year}';
   }
+
 
   void _showDatePicker() async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: DateTime(1990, 3, 15),
+      initialDate: _selectedBirthday ?? DateTime(1990, 3, 15),
       firstDate: DateTime(1900),
       lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: Theme.of(context).colorScheme.copyWith(
+              primary: const Color(0xFF8B5CF6),
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
     if (picked != null && mounted) {
+      setState(() {
+        _selectedBirthday = picked;
+      });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Birthday updated: ${picked.day}/${picked.month}/${picked.year}')),
+        SnackBar(
+          content: Text('Birthday updated: ${_formatBirthday(picked)}'),
+          backgroundColor: const Color(0xFF10B981),
+        ),
       );
     }
   }
 
   void _showGenderPicker() {
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Select Gender'),
@@ -458,9 +376,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           ].map((gender) => ListTile(
             title: Text(gender),
             onTap: () {
+              setState(() {
+                _selectedGender = gender;
+              });
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Gender updated: $gender')),
+                SnackBar(
+                  content: Text('Gender updated: $gender'),
+                  backgroundColor: const Color(0xFF10B981),
+                ),
               );
             },
           )).toList(),

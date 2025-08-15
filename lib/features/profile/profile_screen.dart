@@ -8,6 +8,11 @@ import 'package:pulsebreak_plus/features/settings/settings_screen.dart';
 import 'package:pulsebreak_plus/services/mood_service.dart';
 import 'package:pulsebreak_plus/services/auth_service.dart';
 import 'package:pulsebreak_plus/services/user_service.dart';
+import 'last_checkin_screen.dart';
+import 'hydration_nutrition_screen.dart';
+import 'streak_details_screen.dart';
+import 'habit_tracker_screen.dart';
+import 'journal_reflections_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -238,7 +243,10 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
           icon: Icons.access_time,
           accentColor: const Color(0xFF4F8A8B),
           onTap: () {
-            // Navigate to last check-in details
+            Navigator.push(
+              context,
+              MaterialPageRoute<void>(builder: (context) => const LastCheckInScreen()),
+            );
           },
         ),
         
@@ -265,7 +273,10 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
           icon: Icons.water_drop,
           accentColor: const Color(0xFF0EA5E9),
           onTap: () {
-            // Navigate to hydration logs
+            Navigator.push(
+              context,
+              MaterialPageRoute<void>(builder: (context) => const HydrationNutritionScreen()),
+            );
           },
         ),
         
@@ -277,7 +288,10 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
           icon: Icons.local_fire_department,
           accentColor: const Color(0xFFEF4444),
           onTap: () {
-            // Navigate to streak details
+            Navigator.push(
+              context,
+              MaterialPageRoute<void>(builder: (context) => const StreakDetailsScreen()),
+            );
           },
         ),
         
@@ -289,7 +303,10 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
           icon: Icons.track_changes,
           accentColor: const Color(0xFF10B981),
           onTap: () {
-            // Navigate to habit tracker
+            Navigator.push(
+              context,
+              MaterialPageRoute<void>(builder: (context) => const HabitTrackerScreen()),
+            );
           },
         ),
         
@@ -301,7 +318,10 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
           icon: Icons.book,
           accentColor: const Color(0xFF8B5CF6),
           onTap: () {
-            // Navigate to journal
+            Navigator.push(
+              context,
+              MaterialPageRoute<void>(builder: (context) => const JournalReflectionsScreen()),
+            );
           },
         ),
         
